@@ -18,6 +18,12 @@ import { newId } from '../core/ids'
 
 const SAVE_DELAY = 400
 
+function formatWhen(timestamp: number): string {
+  const date = new Date(timestamp)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${date.getMonth() + 1} 月 ${date.getDate()} 日 ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 /** markdown-it + DOMPurify 只在第一次切预览时加载，不拖累冷启动。 */
 const MarkdownView = lazy(() =>
   import('../components/MarkdownView').then((mod) => ({ default: mod.MarkdownView })),
@@ -179,62 +185,77 @@ export function EditorScreen() {
         </button>
       </header>
 
-      <div className="editor__body">
-        {mode === 'preview' ? (
-          <div className="editor__preview">
-            {previewSource.trim() ? (
-              <Suspense fallback={<p className="empty__hint">渲染中…</p>}>
-                <MarkdownView source={previewSource} />
-              </Suspense>
-            ) : (
-              <p className="empty__hint">这条笔记还是空的。</p>
-            )}
-          </div>
-        ) : (
-          <textarea
-            key={editing.id}
-            ref={textareaRef}
-            className="editor__textarea"
-            defaultValue={editing.body}
-            placeholder="写点什么…"
-            spellCheck={false}
-            onChange={(event) => scheduleSave(event.target.value)}
-          />
-        )}
-      </div>
+      <div className="editor__stage">
+        <article className="paper-sheet">
+          {mode === 'preview' ? (
+            <div className="reader">
+              <div className="reader__meta">
+                <span>{formatWhen(editing.updatedAt)}</span>
+                <span className="reader__dot" />
+                <span>{courseName}</span>
+                {editing.pinned ? (
+                  <>
+                    <span className="reader__dot" />
+                    <span>置顶</span>
+                  </>
+                ) : null}
+              </div>
+              <div className="reader__body">
+                {previewSource.trim() ? (
+                  <Suspense fallback={<p className="empty__hint">渲染中…</p>}>
+                    <MarkdownView source={previewSource} />
+                  </Suspense>
+                ) : (
+                  <p className="empty__hint">这条笔记还是空的。</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <textarea
+              key={editing.id}
+              ref={textareaRef}
+              className="editor__textarea"
+              defaultValue={editing.body}
+              placeholder="写点什么…"
+              spellCheck={false}
+              onChange={(event) => scheduleSave(event.target.value)}
+            />
+          )}
 
-      {mode === 'edit' ? (
-        <div className="editor__toolbar" role="toolbar" aria-label="格式">
-          <button type="button" className="tool" aria-label="加粗" onClick={() => wrap('**', '**')}>
-            <Bold size={17} />
-          </button>
-          <button type="button" className="tool" aria-label="斜体" onClick={() => wrap('*', '*')}>
-            <Italic size={17} />
-          </button>
-          <button type="button" className="tool" aria-label="标题" onClick={() => prefixLine('## ')}>
-            <Heading2 size={17} />
-          </button>
-          <button type="button" className="tool" aria-label="列表" onClick={() => prefixLine('- ')}>
-            <List size={17} />
-          </button>
-          <button type="button" className="tool" aria-label="引用" onClick={() => prefixLine('> ')}>
-            <Quote size={17} />
-          </button>
-          <button type="button" className="tool" aria-label="插入图片" onClick={() => fileRef.current?.click()}>
-            <ImageIcon size={17} />
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(event) => {
-              void onPickImage(event.target.files?.[0])
-              event.target.value = ''
-            }}
-          />
-        </div>
-      ) : null}
+          {mode === 'edit' ? (
+            <div className="editor__toolbar" role="toolbar" aria-label="格式">
+              <button type="button" className="tool" aria-label="加粗" onClick={() => wrap('**', '**')}>
+                <Bold size={17} />
+              </button>
+              <button type="button" className="tool" aria-label="斜体" onClick={() => wrap('*', '*')}>
+                <Italic size={17} />
+              </button>
+              <button type="button" className="tool" aria-label="标题" onClick={() => prefixLine('## ')}>
+                <Heading2 size={17} />
+              </button>
+              <button type="button" className="tool" aria-label="列表" onClick={() => prefixLine('- ')}>
+                <List size={17} />
+              </button>
+              <button type="button" className="tool" aria-label="引用" onClick={() => prefixLine('> ')}>
+                <Quote size={17} />
+              </button>
+              <button type="button" className="tool" aria-label="插入图片" onClick={() => fileRef.current?.click()}>
+                <ImageIcon size={17} />
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(event) => {
+                  void onPickImage(event.target.files?.[0])
+                  event.target.value = ''
+                }}
+              />
+            </div>
+          ) : null}
+        </article>
+      </div>
 
       {sheet === 'course' ? (
         <div className="sheet-mask" onClick={() => setSheet('none')}>
