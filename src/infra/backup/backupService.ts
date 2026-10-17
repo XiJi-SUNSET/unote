@@ -8,7 +8,7 @@ import { courseRepo } from '../db/courseRepo'
 import { noteRepo } from '../db/noteRepo'
 import { unzipEntries, zipEntries } from './zip'
 
-const EXPORT_SETTINGS = new Set(['theme', 'glass', 'blur', 'dim'])
+const EXPORT_SETTINGS = new Set(['theme', 'overlay', 'blur', 'bgBlur', 'card', 'sheet'])
 
 export interface ExportResult {
   blob: Blob

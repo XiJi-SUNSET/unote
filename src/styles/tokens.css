@@ -44,7 +44,6 @@
 
   --font-ui: system-ui, -apple-system, "MiSans", "HarmonyOS Sans SC", "PingFang SC",
     "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
-  --font-read: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif;
 
   /* 毛玻璃强度，设置页可调 */
   --blur: 16px;

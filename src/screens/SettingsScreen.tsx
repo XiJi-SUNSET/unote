@@ -51,7 +51,6 @@ export function SettingsScreen() {
   const purgeNote = useApp((state) => state.purgeNote)
 
   const theme = useSettings((state) => state.theme)
-  const glass = useSettings((state) => state.glass)
   const overlay = useSettings((state) => state.overlay)
   const blur = useSettings((state) => state.blur)
   const bgBlur = useSettings((state) => state.bgBlur)
@@ -60,7 +59,6 @@ export function SettingsScreen() {
   const wallpaperUrl = useSettings((state) => state.wallpaperUrl)
   const hasWallpaper = useSettings((state) => state.wallpaperId !== null)
   const setTheme = useSettings((state) => state.setTheme)
-  const setGlass = useSettings((state) => state.setGlass)
   const setGlassValue = useSettings((state) => state.setGlassValue)
   const setWallpaper = useSettings((state) => state.setWallpaper)
   const clearWallpaper = useSettings((state) => state.clearWallpaper)
@@ -194,25 +192,11 @@ export function SettingsScreen() {
           <SliderRow
             label="阅读纸面"
             value={sheet}
-            min={60}
+            min={0}
             max={100}
             suffix="%"
             onChange={(value) => void setGlassValue('sheet', value)}
           />
-
-          <div className="panel__row switch-row">
-            <span className="panel__hint">毛玻璃</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={glass}
-              aria-label="毛玻璃"
-              className={`switch${glass ? ' is-on' : ''}`}
-              onClick={() => void setGlass(!glass)}
-            >
-              <span className="switch__knob" />
-            </button>
-          </div>
 
           <input
             ref={wallpaperRef}

@@ -8,7 +8,7 @@ import { averageLuma } from '../infra/image/luma'
 
 export const WALLPAPER_ASSET_PREFIX = 'wallpaper-'
 
-/** 与 Exterior 的 GLASS_DEFAULTS 对齐：遮罩 45 / 模糊 16 / 卡片 62 / 壁纸模糊 0 */
+/** 与 Exterior 的 GLASS_DEFAULTS 对齐：遮罩 / 模糊 / 卡片 / 壁纸模糊 */
 export const GLASS_DEFAULTS = {
   overlay: 22,
   blur: 16,
@@ -23,7 +23,6 @@ interface SettingsState {
   ready: boolean
   theme: Theme
   scheme: Scheme
-  glass: boolean
   overlay: number
   blur: number
   bgBlur: number
@@ -35,7 +34,6 @@ interface SettingsState {
 
   load: () => Promise<void>
   setTheme: (theme: Theme) => Promise<void>
-  setGlass: (enabled: boolean) => Promise<void>
   setGlassValue: (key: GlassKey, value: number) => Promise<void>
   setWallpaper: (file: File) => Promise<void>
   clearWallpaper: () => Promise<void>
@@ -52,7 +50,6 @@ function revokeCurrent() {
 
 interface Visuals {
   theme: Theme
-  glass: boolean
   overlay: number
   blur: number
   bgBlur: number
@@ -62,8 +59,9 @@ interface Visuals {
 }
 
 /**
- * 把用户调的四个材质参数写成 CSS 变量。
+ * 把用户调的材质参数写成 CSS 变量。
  * 结构对齐 Exterior：壁纸遮罩 / 界面模糊 / 壁纸模糊 / 界面不透明度。
+ * 毛玻璃常开，不设开关。
  */
 function applyVisuals(state: Visuals): Scheme {
   const scheme = resolveScheme(state.theme, state.wallpaperLuma)
@@ -86,7 +84,6 @@ function applyVisuals(state: Visuals): Scheme {
   root.style.setProperty('--glass', `rgba(${cardRgb}, ${cardAlpha})`)
   root.style.setProperty('--glass-strong', `rgba(${cardRgb}, ${Math.min(0.96, cardAlpha + 0.24)})`)
   root.style.setProperty('--sheet', `rgba(${cardRgb}, ${state.sheet / 100})`)
-  root.dataset.glass = state.glass ? 'on' : 'off'
 
   return scheme
 }
@@ -94,7 +91,6 @@ function applyVisuals(state: Visuals): Scheme {
 function visualsOf(state: SettingsState): Visuals {
   return {
     theme: state.theme,
-    glass: state.glass,
     overlay: state.overlay,
     blur: state.blur,
     bgBlur: state.bgBlur,
@@ -108,25 +104,22 @@ export const useSettings = create<SettingsState>()((set, get) => ({
   ready: false,
   theme: 'auto',
   scheme: 'light',
-  glass: true,
   ...GLASS_DEFAULTS,
   wallpaperId: null,
   wallpaperUrl: null,
   wallpaperLuma: null,
 
   async load() {
-    const [theme, glass, overlay, blur, bgBlur, card, sheet, wallpaperId, wallpaperLuma] =
-      await Promise.all([
-        getSetting<Theme>('theme', 'auto'),
-        getSetting<boolean>('glass', true),
-        getSetting<number>('overlay', GLASS_DEFAULTS.overlay),
-        getSetting<number>('blur', GLASS_DEFAULTS.blur),
-        getSetting<number>('bgBlur', GLASS_DEFAULTS.bgBlur),
-        getSetting<number>('card', GLASS_DEFAULTS.card),
-        getSetting<number>('sheet', GLASS_DEFAULTS.sheet),
-        getSetting<string | null>('wallpaperId', null),
-        getSetting<number | null>('wallpaperLuma', null),
-      ])
+    const [theme, overlay, blur, bgBlur, card, sheet, wallpaperId, wallpaperLuma] = await Promise.all([
+      getSetting<Theme>('theme', 'auto'),
+      getSetting<number>('overlay', GLASS_DEFAULTS.overlay),
+      getSetting<number>('blur', GLASS_DEFAULTS.blur),
+      getSetting<number>('bgBlur', GLASS_DEFAULTS.bgBlur),
+      getSetting<number>('card', GLASS_DEFAULTS.card),
+      getSetting<number>('sheet', GLASS_DEFAULTS.sheet),
+      getSetting<string | null>('wallpaperId', null),
+      getSetting<number | null>('wallpaperLuma', null),
+    ])
 
     let wallpaperUrl: string | null = null
     if (wallpaperId) {
@@ -141,7 +134,6 @@ export const useSettings = create<SettingsState>()((set, get) => ({
     const next: SettingsState = {
       ...get(),
       theme,
-      glass,
       overlay,
       blur,
       bgBlur,
@@ -159,12 +151,6 @@ export const useSettings = create<SettingsState>()((set, get) => ({
     await setSetting('theme', theme)
     const scheme = applyVisuals(visualsOf({ ...get(), theme }))
     set({ theme, scheme })
-  },
-
-  async setGlass(glass) {
-    await setSetting('glass', glass)
-    applyVisuals(visualsOf({ ...get(), glass }))
-    set({ glass })
   },
 
   async setGlassValue(key, value) {
