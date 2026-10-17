@@ -15,6 +15,35 @@ const THEMES: Array<{ value: Theme; label: string }> = [
   { value: 'dark', label: '深色' },
 ]
 
+interface SliderRowProps {
+  label: string
+  value: number
+  min: number
+  max: number
+  suffix: string
+  onChange: (value: number) => void
+}
+
+function SliderRow({ label, value, min, max, suffix, onChange }: SliderRowProps) {
+  return (
+    <label className="field">
+      <span>
+        {label} · {value}
+        {suffix}
+      </span>
+      <input
+        className="slider"
+        type="range"
+        min={min}
+        max={max}
+        step={1}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+    </label>
+  )
+}
+
 export function SettingsScreen() {
   const goList = useApp((state) => state.goList)
   const deleted = useApp((state) => state.deleted)
@@ -23,14 +52,16 @@ export function SettingsScreen() {
 
   const theme = useSettings((state) => state.theme)
   const glass = useSettings((state) => state.glass)
+  const overlay = useSettings((state) => state.overlay)
   const blur = useSettings((state) => state.blur)
-  const dim = useSettings((state) => state.dim)
+  const bgBlur = useSettings((state) => state.bgBlur)
+  const card = useSettings((state) => state.card)
+  const sheet = useSettings((state) => state.sheet)
   const wallpaperUrl = useSettings((state) => state.wallpaperUrl)
   const hasWallpaper = useSettings((state) => state.wallpaperId !== null)
   const setTheme = useSettings((state) => state.setTheme)
   const setGlass = useSettings((state) => state.setGlass)
-  const setBlur = useSettings((state) => state.setBlur)
-  const setDim = useSettings((state) => state.setDim)
+  const setGlassValue = useSettings((state) => state.setGlassValue)
   const setWallpaper = useSettings((state) => state.setWallpaper)
   const clearWallpaper = useSettings((state) => state.clearWallpaper)
 
@@ -128,42 +159,58 @@ export function SettingsScreen() {
             ) : null}
           </div>
 
-          <label className="field">
-            <span>模糊 {blur}px</span>
-            <input
-              className="slider"
-              type="range"
-              min={0}
-              max={30}
-              step={1}
-              value={blur}
-              onChange={(event) => void setBlur(Number(event.target.value))}
-            />
-          </label>
+          <SliderRow
+            label="壁纸遮罩"
+            value={overlay}
+            min={0}
+            max={90}
+            suffix="%"
+            onChange={(value) => void setGlassValue('overlay', value)}
+          />
+          <SliderRow
+            label="壁纸模糊"
+            value={bgBlur}
+            min={0}
+            max={30}
+            suffix="px"
+            onChange={(value) => void setGlassValue('bgBlur', value)}
+          />
+          <SliderRow
+            label="界面模糊"
+            value={blur}
+            min={0}
+            max={30}
+            suffix="px"
+            onChange={(value) => void setGlassValue('blur', value)}
+          />
+          <SliderRow
+            label="卡片不透明度"
+            value={card}
+            min={20}
+            max={95}
+            suffix="%"
+            onChange={(value) => void setGlassValue('card', value)}
+          />
+          <SliderRow
+            label="阅读纸面"
+            value={sheet}
+            min={60}
+            max={100}
+            suffix="%"
+            onChange={(value) => void setGlassValue('sheet', value)}
+          />
 
-          <label className="field">
-            <span>压暗 {Math.round(dim * 100)}%</span>
-            <input
-              className="slider"
-              type="range"
-              min={0}
-              max={60}
-              step={1}
-              value={Math.round(dim * 100)}
-              onChange={(event) => void setDim(Number(event.target.value) / 100)}
-            />
-          </label>
-
-          <div className="panel__row" style={{ marginTop: 'var(--sp-3)' }}>
-            <span className="panel__hint" style={{ flex: 1 }}>
-              毛玻璃
-            </span>
+          <div className="panel__row switch-row">
+            <span className="panel__hint">毛玻璃</span>
             <button
               type="button"
-              className={`segmented__item${glass ? ' is-active' : ''}`}
+              role="switch"
+              aria-checked={glass}
+              aria-label="毛玻璃"
+              className={`switch${glass ? ' is-on' : ''}`}
               onClick={() => void setGlass(!glass)}
             >
-              {glass ? '开' : '关'}
+              <span className="switch__knob" />
             </button>
           </div>
 

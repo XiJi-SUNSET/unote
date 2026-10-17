@@ -49,6 +49,8 @@ textarea {
   inset: -56px; /* 多铺一圈，模糊后边缘不露白 */
   background-position: center;
   background-size: cover;
+  filter: blur(var(--bg-blur));
+  transform: scale(1.04);
   transition: filter var(--dur-base) var(--ease-out);
 }
 
@@ -56,15 +58,15 @@ textarea {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(120% 80% at 88% -12%, color-mix(in srgb, var(--periwinkle) 58%, transparent), transparent 60%),
-    radial-gradient(110% 75% at 2% 106%, color-mix(in srgb, var(--coral) 46%, transparent), transparent 64%),
+    radial-gradient(120% 85% at 88% -12%, color-mix(in srgb, var(--periwinkle) 78%, transparent), transparent 58%),
+    radial-gradient(115% 80% at 2% 108%, color-mix(in srgb, var(--coral) 62%, transparent), transparent 62%),
     linear-gradient(165deg, var(--bg) 0%, var(--bg-2) 100%);
 }
 
-.wallpaper__scrim {
+.wallpaper__veil {
   position: absolute;
   inset: 0;
-  background: #000;
+  background: var(--overlay);
 }
 
 .app {
@@ -446,10 +448,10 @@ textarea {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
-  background: var(--glass-strong);
+  background: var(--sheet);
   backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.45);
   -webkit-backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.45);
-  box-shadow: 0 18px 48px rgba(40, 28, 22, 0.22);
+  box-shadow: 0 20px 52px rgba(40, 28, 22, 0.3);
   animation: sheetIn var(--dur-base) var(--ease-out);
 }
 
@@ -814,8 +816,81 @@ textarea {
 }
 
 .slider {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
+  height: 24px;
+  background: transparent;
   accent-color: var(--accent);
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  border: 2px solid var(--panel);
+  background: var(--accent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.slider::-moz-range-track {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--panel);
+  background: var(--accent);
+}
+
+.switch-row {
+  justify-content: space-between;
+  margin-top: var(--sp-3);
+}
+
+.switch {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+  transition: background var(--dur-fast);
+}
+
+.switch.is-on {
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.switch__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.switch.is-on .switch__knob {
+  transform: translateX(18px);
 }
 
 .trash {

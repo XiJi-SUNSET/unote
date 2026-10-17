@@ -55,9 +55,11 @@
   --ink: #403b3a;
   --muted: rgba(64, 59, 58, 0.62);
   --line: rgba(64, 59, 58, 0.12);
-  --glass: rgba(255, 247, 240, 0.66);
-  --glass-strong: rgba(255, 247, 240, 0.9);
-  --paper: rgba(255, 248, 242, 0.94);
+  --glass: rgba(255, 247, 240, 0.62);
+  --glass-strong: rgba(255, 247, 240, 0.86);
+  --sheet: rgba(255, 247, 240, 0.9);
+  --overlay: rgba(255, 239, 229, 0.35);
+  --bg-blur: 0px;
   --accent: #fa532d;
   --accent-ink: #fff8f3;
   --accent-soft: rgba(250, 83, 45, 0.12);
@@ -78,7 +80,9 @@
   --line: rgba(255, 239, 229, 0.14);
   --glass: rgba(48, 38, 34, 0.62);
   --glass-strong: rgba(42, 33, 29, 0.9);
-  --paper: rgba(26, 20, 18, 0.94);
+  --sheet: rgba(42, 33, 29, 0.92);
+  --overlay: rgba(28, 22, 20, 0.42);
+  --bg-blur: 0px;
   --accent: #ff6b47;
   --accent-ink: #2a1610;
   --accent-soft: rgba(250, 83, 45, 0.2);

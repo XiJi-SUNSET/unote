@@ -24,6 +24,7 @@
 - 备份：导出 ZIP（notes/*.md + assets/ + courses.json + manifest.json）与导入（合并 / 覆盖）
 - 交互：打开笔记默认渲染 Markdown，右滑卡片露出置顶 / 删除
 - 阅读层重做：背景压暗 + 浮起玻璃纸面（照 Exterior 的 modal / modal-card），正文改系统无衬线 16px
+- 材质可调：壁纸遮罩 / 壁纸模糊 / 界面模糊 / 卡片不透明度 / 阅读纸面 五个滑杆，实时写 CSS 变量
 - 测试：28 条（含 Dexie 真实读写、备份往返、默认渲染态）
 
 ## [Unreleased]
