@@ -94,9 +94,12 @@ M0 落地后会追加 `src/`、`android/`、`package.json` 等工程目录，届
 ```bash
 pnpm install
 pnpm dev          # 浏览器预览（无原生能力）
-pnpm android:run  # 装到真机 / 模拟器
-pnpm build        # 产物：android/app/build/outputs/apk/release/
+pnpm test         # 单元 + 集成测试
+pnpm android:sync # 构建 web 产物并同步进 Android 工程
+pnpm android:open # 用 Android Studio 打开原生工程
 ```
+
+APK 由 GitHub Actions 构建（`.github/workflows/android.yml`）：推 `v*` tag 时自动出包并挂到 Release；也可以在 Actions 页手动触发。
 
 ## 路线图
 

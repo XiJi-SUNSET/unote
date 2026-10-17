@@ -53,10 +53,12 @@
 - [x] 插图：选图 → Canvas 压缩 → WebP → 插入 `asset:` 引用
 - [x] 冷启动恢复：上一篇
 - [x] 集成测试：Vitest + fake-indexeddb（21 条通过）
-- [ ] Capacitor Android 壳 + 移除 `INTERNET` 权限
-- [ ] 课程重命名 / 删除的 UI
+- [x] Capacitor Android 壳 + 移除 `INTERNET` 权限（`applicationId app.unote`、minSdk 26、关闭 allowBackup）
+- [x] 课程删除 UI（设置 → 课程，删课不删笔记）
+- [ ] 课程重命名 UI
 - [ ] 返回键与边到边适配
 - [ ] 真机走查：键盘遮挡、滚动、图片内存
+- [ ] 首次 GitHub Actions 构建验证（本地无 JDK，只能由 CI 首跑确认）
 - [ ] Playwright e2e（等 Android 壳落地后对着真浏览器跑）
 
 **DoD**：连续 20 节真实课堂笔记，无数据丢失、无输入卡顿。

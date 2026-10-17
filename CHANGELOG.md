@@ -25,6 +25,9 @@
 - 交互：打开笔记默认渲染 Markdown，右滑卡片露出置顶 / 删除
 - 阅读层重做：背景压暗 + 浮起玻璃纸面（照 Exterior 的 modal / modal-card），正文改系统无衬线 16px
 - 材质可调：壁纸遮罩 / 壁纸模糊 / 界面模糊 / 卡片不透明度 / 阅读纸面 五个滑杆，实时写 CSS 变量
+- 课程管理：设置里显示每门课的笔记数，可删除课程（笔记迁到未分类，不级联删除）
+- Android 壳：Capacitor 8，`app.unote`，minSdk 26，**清单里没有 INTERNET 权限**，关闭系统备份
+- GitHub Actions `android.yml`：tag 触发构建 debug APK 并挂到 Release
 - 测试：28 条（含 Dexie 真实读写、备份往返、默认渲染态）
 
 ## [Unreleased]
