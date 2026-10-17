@@ -22,19 +22,20 @@
 - [x] 分层与目录结构 → [02-architecture.md](02-architecture.md)
 - [x] 数据模型与备份格式 → [03-data-backup.md](03-data-backup.md)
 - [x] 视觉与交互基线 → [04-design-system.md](04-design-system.md)
-- [ ] 三个产品决策拍板（见 M0 待办）
+- [x] 同类项目调研 → [06-prior-art.md](06-prior-art.md)
+- [x] 三个产品决策拍板（2026-10-17）
 - [ ] 视觉稿：3 个关键屏（列表 / 编辑 / 设置）+ 一个壁纸状态
 - [ ] 图标与 wordmark 草图
 
-### M0 待办
+### 已拍板
 
-| # | 决策 | 选项 | 影响 |
+| # | 决策 | 结论 | 已落到 |
 |---|---|---|---|
-| 1 | 编辑器形态 | 预览切换 / 实时分屏 / WYSIWYG | 决定 M1 的工作量级 |
-| 2 | 笔记组织 | 扁平 + 标签 / 课程分组 | 决定数据模型是否要加 `courseId` |
-| 3 | 壁纸粒度 | 全局一张 / 每篇可覆盖 | 决定 `Note.wallpaperId` 是否保留 |
+| 1 | 编辑器形态 | 编辑 / 预览切换 | [01](01-tech-stack.md) §8 |
+| 2 | 笔记组织 | 按课程分组（`Note.courseId`） | [02](02-architecture.md) §4.6、[03](03-data-backup.md) §2 |
+| 3 | 壁纸粒度 | 全局一张 | [01](01-tech-stack.md) §8 |
 
-> 这三项一旦进入 M1 再改，代价分别是：重写编辑器、迁移数据库、改设置页 + 渲染层。**现在改只要一句话。**
+> 这三项如果拖到 M1 再改，代价分别是：重写编辑器、迁移数据库、改设置页 + 渲染层。
 
 ---
 
@@ -44,13 +45,15 @@
 
 - [ ] 工程脚手架：Vite + React + TS strict + Capacitor Android
 - [ ] 移除 `INTERNET` 权限，跑通空壳安装
-- [ ] 数据层：Dexie schema v1 + NoteRepo / AssetRepo
-- [ ] 列表屏：时间线、置顶、空态
+- [ ] 数据层：Dexie schema v1 + NoteRepo / CourseRepo / AssetRepo
+- [ ] 课程：`inbox` 兜底、课程增删改、新建默认落在上次课程
+- [ ] 列表屏：课程 chips、时间线、置顶、空态
 - [ ] 编辑屏：textarea、自动保存（400ms debounce + 失焦 flush）、标题联动
 - [ ] 预览屏：markdown-it + DOMPurify + 图片渲染
 - [ ] 插图：选图 → 压缩 → 插入 `asset:` 引用
 - [ ] 冷启动恢复：上一篇 / 草稿
 - [ ] 返回键与边到边适配
+- [ ] Playwright e2e：新建 → 输入 → 切预览 → 导出（桌面浏览器跑，见[调研](06-prior-art.md) §3.3）
 
 **DoD**：连续 20 节真实课堂笔记，无数据丢失、无输入卡顿。
 

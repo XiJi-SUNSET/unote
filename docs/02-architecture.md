@@ -40,32 +40,36 @@ src/
 │   ├── screenStack.ts        # 三个屏的极简路由
 │   └── boot.ts               # 冷启动决策：恢复上次编辑 / 新建 / 空态
 ├── screens/
-│   ├── ListScreen/           # 时间线 + 搜索 + 标签
-│   ├── EditorScreen/         # 编辑 / 预览 / 插图 / 壁纸
+│   ├── ListScreen/           # 课程切换 + 时间线 + 搜索
+│   ├── EditorScreen/         # 编辑 / 预览 / 插图
 │   └── SettingsScreen/       # 主题、壁纸、导出、关于
 ├── components/
 │   ├── Wallpaper/            # 壁纸层 + scrim + 明暗自适应
 │   ├── MarkdownView/         # markdown-it 渲染 + 图片解析
 │   ├── EditorToolbar/        # 键盘上方的格式化条
+│   ├── CourseChips/          # 课程切换条（横向滚动）
 │   ├── NoteCard/
 │   ├── Sheet/                # 底部弹层
 │   └── ...
 ├── core/                     # ← 可移植边界
 │   ├── model/note.ts         # Note / Asset 类型与不变量
+│   ├── model/course.ts       # Course；'inbox'（未分类）为保留课程
 │   ├── markdown/render.ts    # md -> html（含 asset: 协议）
 │   ├── backup/manifest.ts    # 备份格式定义与校验
 │   ├── backup/export.ts      # 纯函数：数据 -> zip 条目
 │   ├── backup/import.ts      # 纯函数：zip 条目 -> 数据 + 合并策略
-│   └── ports.ts              # NoteRepo / AssetRepo / FileSink 接口
+│   └── ports.ts              # NoteRepo / CourseRepo / AssetRepo / FileSink
 ├── infra/
 │   ├── db/schema.ts          # Dexie 表结构与版本迁移
 │   ├── db/noteRepo.ts
+│   ├── db/courseRepo.ts
 │   ├── db/assetRepo.ts
 │   ├── image/compress.ts     # createImageBitmap -> canvas -> webp
 │   ├── fs/shareSink.ts       # Capacitor Filesystem + Share
 │   └── native/               # 状态栏、键盘、返回键、震动
 ├── stores/
 │   ├── notesStore.ts
+│   ├── coursesStore.ts
 │   ├── editorStore.ts
 │   └── settingsStore.ts
 ├── styles/
@@ -157,6 +161,20 @@ src/
 
 做法：DOM 结构不变，只用 CSS Grid 改变布局（`grid-template-columns`），列表在横屏从"覆盖层"变成"左侧栏"。React 组件树零变化。
 
+### 4.6 课程归属
+
+按课程分组给"5 秒法则"带来了一次额外选择。破解方式是**把选择挪到用户不赶时间的那一刻**：
+
+| 场景 | 行为 |
+|---|---|
+| 冷启动 | 直接回到上一篇，**不问课程** |
+| 点"新建" | 默认落在 `settings.lastCourseId`，顶部课程条可一键改 |
+| 首次使用 | 自动建 `inbox`（未分类），不做引导 |
+| 删除课程 | 其下笔记全部迁到 `inbox`，**绝不做级联删除** |
+| 课程重命名 | 只改 `name`，`id` 不变；备份按 id 匹配，改名不会拆出重复课程 |
+
+课程切换器是**横向滚动的 chips**，不是全屏列表——多一次全屏交互，就多一次打断。
+
 ---
 
 ## 5. 可移植边界
@@ -169,6 +187,12 @@ export interface NoteRepo {
   list(query: ListQuery): Promise<Note[]>
   upsert(note: Note): Promise<void>
   remove(id: string): Promise<void>
+}
+
+export interface CourseRepo {
+  list(): Promise<Course[]>
+  upsert(course: Course): Promise<void>
+  remove(id: string): Promise<void>   // 其下笔记迁移到 'inbox'，不级联删除
 }
 
 export interface AssetRepo {

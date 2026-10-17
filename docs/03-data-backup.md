@@ -11,7 +11,8 @@ IndexedDB 由 Dexie 管理，库名 `unote`，schema 版本号即 Dexie 的 `ver
 
 ```ts
 db.version(1).stores({
-  notes:     '&id, updatedAt, createdAt, pinned, *tags',
+  notes:     '&id, courseId, updatedAt, createdAt, pinned, *tags',
+  courses:   '&id, order',
   assets:    '&id, createdAt',
   settings:  '&key',
   snapshots: '&id, createdAt',
@@ -20,7 +21,8 @@ db.version(1).stores({
 
 | 表 | 主键 | 索引 | 说明 |
 |---|---|---|---|
-| `notes` | `id` | `updatedAt`, `createdAt`, `pinned`, `*tags`（多值） | 正文、标题、元数据 |
+| `notes` | `id` | `courseId`, `updatedAt`, `createdAt`, `pinned`, `*tags`（多值） | 正文、标题、元数据 |
+| `courses` | `id` | `order` | 课程；`inbox` 为保留课程，不可删 |
 | `assets` | `id` | `createdAt` | 图片 Blob，与笔记解耦（可被多篇引用） |
 | `settings` | `key` | — | 键值对，`value` 是 JSON |
 | `snapshots` | `id` | `createdAt` | 本地快照，仅文本，保留 7 份 |
@@ -34,14 +36,22 @@ db.version(1).stores({
 ```ts
 export interface Note {
   id: string            // ULID，字典序 = 时间序
+  courseId: string      // 必填；默认 'inbox'（未分类）
   title: string         // 显式标题；空字符串表示"用首行"
   body: string          // Markdown 正文，不含 frontmatter
   createdAt: number     // epoch ms
   updatedAt: number
   pinned: boolean
   tags: string[]
-  wallpaperId: string | null   // 覆盖全局壁纸；null = 跟随全局
   schema: 1             // 单条记录的格式版本
+}
+
+export interface Course {
+  id: string            // ULID；'inbox' 为保留值
+  name: string          // 课程名，可重命名
+  order: number         // 手动排序，小的在前
+  archived: boolean     // 归档后不在切换条出现，笔记仍保留
+  createdAt: number
 }
 
 export interface Asset {
@@ -61,6 +71,8 @@ export interface Asset {
 2. `id` 一旦生成永不变更，导入时用它做去重与合并。
 3. `updatedAt` 单调不减；同一毫秒内多次保存取 `max(now, updatedAt + 1)`。
 4. 删除笔记不立即删 `assets`，由"孤立资源清理"任务（每周一次）回收。
+5. `courseId` 必须指向存在的课程；`inbox` 永远存在，不能删除、不能归档、不能改名。
+6. 删除课程时，其下笔记整体迁到 `inbox`，**不得级联删除笔记**。
 
 ---
 
@@ -104,6 +116,7 @@ unote-20261017-1929.zip
 unote-20261017-1929.zip
 ├── manifest.json
 ├── settings.json
+├── courses.json
 ├── notes/
 │   ├── 2026-10-17-01J9Z6Q2K7.md
 │   ├── 2026-10-16-01J9Y1M8RB.md
@@ -112,6 +125,8 @@ unote-20261017-1929.zip
     ├── 01J8X4M2NA.webp
     └── ...
 ```
+
+- `courses.json` 保存课程表（名称、顺序、归档状态），**不带它，进另一台设备就只剩一堆没归类的笔记**。
 
 - 笔记文件名 = `<创建日期>-<id前10位>.md`，**人类可读**，也是"用别的编辑器直接打开"的入口。
 - 笔记内的图片引用在导出时被改写为包内相对路径 `assets/<id>.webp`；导入时再改写回 `asset:<id>`。
@@ -126,7 +141,7 @@ unote-20261017-1929.zip
   "appVersion": "0.4.0",
   "exportedAt": "2026-10-17T11:29:00.000Z",
   "timezone": "Asia/Shanghai",
-  "counts": { "notes": 128, "assets": 43 },
+  "counts": { "notes": 128, "courses": 6, "assets": 43 },
   "bytes": 18234567
 }
 ```
@@ -146,12 +161,13 @@ unote-20261017-1929.zip
 ```markdown
 ---
 id: 01J9Z6Q2K7
+course: 高等数学
+courseId: 01J9Z5A1BC
 title: 为什么 TCP 要三次握手
 created: 2026-10-17T02:13:44.000Z
 updated: 2026-10-17T02:31:09.000Z
 tags: [计算机网络, 待查]
 pinned: false
-wallpaper: null
 schema: 1
 ---
 
@@ -212,7 +228,7 @@ schema: 1
 | 模式 | 行为 | 适用 |
 |---|---|---|
 | **合并**（默认） | 同 id 比较 `updatedAt`，较新者胜；正文不同则旧的那份存为「标题（冲突副本）」 | 从另一台设备带回增量 |
-| **覆盖** | 清空 `notes`/`assets` 后导入 | 迁移整机、灾难恢复 |
+| **覆盖** | 清空 `notes` / `courses` / `assets` 后导入 | 迁移整机、灾难恢复 |
 
 覆盖模式需要**输入设备上的笔记总数**做二次确认，不用"确定吗"这种无效弹窗。
 
@@ -220,8 +236,8 @@ schema: 1
 
 - **图片去重**：按 `id` 命中即复用；id 不同但 `bytes + 尺寸` 相同则复用并改引用（少见，但能省一半空间）。
 - **标签**：并集，不做大小写归一（"网络"和"网络 "视为两个，导入报告里提示空格异常）。
+- **课程**：先按 `courseId` 匹配；匹配不到再按 `course` 名称匹配（兼容改名后导入的旧包）；仍匹配不到则新建课程，并保留其 `order`。`inbox` 永不被导入覆盖。
 - **置顶**：`pinned` 取 OR，避免导入后丢置顶。
-- **壁纸**：笔记级 `wallpaperId` 若指向包内不存在的 asset，降级为 `null` 并记录。
 
 ---
 
@@ -280,3 +296,6 @@ IndexedDB 是"应用数据"，用户点「清除数据」就会清空，卸载�
 - [ ] 导入同一份 zip 两次 → 第二次结果为「全部跳过」
 - [ ] 1 万条笔记导出 → Worker 不崩、进度单调递增
 - [ ] 笔记标题包含 `/`、`:`、emoji → 文件名安全化后仍可导入
+- [ ] 导入缺少 `courses.json` 的包 → 全部落到 `inbox`，结果页提示
+- [ ] 课程改名后导入旧包 → 按 `courseId` 合并，不产生重复课程
+- [ ] 删除一个含 30 篇笔记的课程 → 30 篇全部迁到 `inbox`，总数守恒

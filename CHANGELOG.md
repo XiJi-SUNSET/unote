@@ -16,10 +16,14 @@
   - `docs/03-data-backup.md` 数据模型与备份包格式 v1
   - `docs/04-design-system.md` 视觉与交互规范
   - `docs/05-roadmap.md` 里程碑与验收标准
-- 架构决策记录：ADR-0001（Capacitor 壳）、ADR-0002（IndexedDB 主存储）
+- 架构决策记录：ADR-0001（Capacitor 壳）、ADR-0002（IndexedDB 主存储）、ADR-0003（不做同步与账号）
+- `docs/06-prior-art.md` 同类项目调研（markor / scratch / crossnote / markleaf / catch）
+- `AGENTS.md`：给 AI 代理与贡献者的架构红线
 
 ### Changed
 
 - 项目定名 `Unote`，包名 `app.unote`
+- 产品决策：编辑器采用「编辑/预览切换」；笔记按课程分组（新增 `Course` 表与 `Note.courseId`）；壁纸为全局一张（移除 `Note.wallpaperId`）
+- 备份格式新增 `courses.json` 与 frontmatter 的 `course` / `courseId` 字段
 
 [Unreleased]: https://github.com/
