@@ -48,3 +48,6 @@ yarn-debug.log*
 .env
 .env.*
 !.env.example
+
+# local preview artifacts
+.preview/
