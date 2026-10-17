@@ -76,7 +76,11 @@ function applyVisuals(state: Visuals): Scheme {
   const cardAlpha = state.card / 100
 
   root.style.setProperty('--overlay', `rgba(${veilRgb}, ${state.overlay / 100})`)
-  root.style.setProperty('--scrim', `rgba(${dark ? '0, 0, 0' : '61, 58, 54'}, ${Math.min(0.7, state.overlay / 100 + 0.12)})`)
+  // 阅读层：浅色几乎不加色，靠强模糊把壁纸化开；深色才压暗（同色，不用灰罩）
+  const scrimAlpha = dark
+    ? Math.min(0.75, state.overlay / 100 + 0.25)
+    : Math.min(0.35, (state.overlay / 100) * 0.6)
+  root.style.setProperty('--scrim', `rgba(${veilRgb}, ${scrimAlpha})`)
   root.style.setProperty('--blur', `${state.blur}px`)
   root.style.setProperty('--bg-blur', `${state.bgBlur}px`)
   root.style.setProperty('--glass', `rgba(${cardRgb}, ${cardAlpha})`)
