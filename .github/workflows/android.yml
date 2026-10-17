@@ -26,12 +26,14 @@ jobs:
           java-version: 21
           cache: gradle
 
-      - uses: android-actions/setup-android@v3
-
       - name: Install Android SDK 36
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" > /dev/null
+          # runner 自带 Android SDK；setup-android@v3 会去装已被移除的 'tools' 包，
+          # 所以直接调用 sdkmanager。
+          SDKMANAGER="$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -n 1)"
+          echo "using $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" > /dev/null
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
