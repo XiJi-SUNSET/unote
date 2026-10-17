@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: typecheck · test · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Assert no outbound network calls
+        run: |
+          # Vite 的 modulepreload polyfill 会用 fetch 加载同源 chunk，属正常；
+          # 这里只拦"绝对地址"的调用——那才是真的外联。
+          if grep -rnE "(fetch|XMLHttpRequest|sendBeacon)\(\s*['\"\`]https?://" dist/assets/*.js; then
+            echo "::error::bundle contains an absolute network call"
+            exit 1
+          fi
+          echo "no outbound calls"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unote-web
+          path: dist
+          retention-days: 7

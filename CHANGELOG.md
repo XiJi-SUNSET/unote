@@ -5,6 +5,22 @@
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0] - 2026-10-17
+
+### Added
+
+- Web 原型跑通：Vite 8 + React 19 + TypeScript strict
+- 数据层：Dexie（notes / courses / assets / settings），带 ULID 生成
+- 列表屏：课程 chips、时间线卡片、空态
+- 底部快速记录条：回车即存，`▸` 展开进编辑器
+- 编辑屏：textarea + 400ms 自动保存 + 失焦/切后台 flush，标题随首行联动
+- 预览：markdown-it + DOMPurify，`asset:` 图片协议，按需懒加载
+- 插图：Canvas 压缩到长边 1600 的 WebP 后存 Blob
+- 课程继承：新建时不询问，按当前上下文落课程
+- 回收站：软删除 + 恢复 + 彻底删除
+- 主题：跟随系统 / 浅色 / 深色
+- 测试：21 条（含 Dexie 真实读写的 store 集成测试）
+
 ## [Unreleased]
 
 ### Added

@@ -36,10 +36,10 @@ UI (screens/components) → 应用层 (stores) → 领域层 (core) → 基础�
 
 ```bash
 pnpm dev           # 浏览器调试（无原生能力）
-pnpm test          # 单元测试
-pnpm e2e           # Playwright（M1 起）
-pnpm android:run   # 真机 / 模拟器
-pnpm lint && pnpm typecheck
+pnpm test          # 单元 + 集成测试（Vitest + fake-indexeddb）
+pnpm typecheck     # tsc --noEmit
+pnpm build         # 产物在 dist/
+pnpm android:run   # 真机 / 模拟器（Capacitor 壳落地后）
 ```
 
 ## 提交前自检

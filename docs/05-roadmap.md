@@ -43,18 +43,21 @@
 
 **目标：能替代纸本，完成一节完整的课。**
 
-- [ ] 工程脚手架：Vite + React + TS strict + Capacitor Android
-- [ ] 移除 `INTERNET` 权限，跑通空壳安装
-- [ ] 数据层：Dexie schema v1 + NoteRepo / CourseRepo / AssetRepo
-- [ ] 课程：`inbox` 兜底、课程增删改、新建**继承当前上下文**（不问课程）
-- [ ] 列表底部快速记录条：回车即存，`▸` 展开进编辑器
-- [ ] 列表屏：课程 chips、时间线、置顶、空态
-- [ ] 编辑屏：textarea、自动保存（400ms debounce + 失焦 flush）、标题联动
-- [ ] 预览屏：markdown-it + DOMPurify + 图片渲染
-- [ ] 插图：选图 → 压缩 → 插入 `asset:` 引用
-- [ ] 冷启动恢复：上一篇 / 草稿
+- [x] 工程脚手架：Vite + React 19 + TS strict
+- [x] 数据层：Dexie schema v1 + NoteRepo / CourseRepo / AssetRepo / settings
+- [x] 课程：`inbox` 兜底 + 新建**继承当前上下文**（不问课程）
+- [x] 列表底部快速记录条：回车即存，`▸` 展开进编辑器
+- [x] 列表屏：课程 chips、时间线、置顶标记、空态
+- [x] 编辑屏：textarea、自动保存（400ms + 失焦/切后台 flush）、标题联动
+- [x] 预览屏：markdown-it + DOMPurify + 图片渲染（懒加载，不进首屏包）
+- [x] 插图：选图 → Canvas 压缩 → WebP → 插入 `asset:` 引用
+- [x] 冷启动恢复：上一篇
+- [x] 集成测试：Vitest + fake-indexeddb（21 条通过）
+- [ ] Capacitor Android 壳 + 移除 `INTERNET` 权限
+- [ ] 课程重命名 / 删除的 UI
 - [ ] 返回键与边到边适配
-- [ ] Playwright e2e：新建 → 输入 → 切预览 → 导出（桌面浏览器跑，见[调研](06-prior-art.md) §3.3）
+- [ ] 真机走查：键盘遮挡、滚动、图片内存
+- [ ] Playwright e2e（等 Android 壳落地后对着真浏览器跑）
 
 **DoD**：连续 20 节真实课堂笔记，无数据丢失、无输入卡顿。
 

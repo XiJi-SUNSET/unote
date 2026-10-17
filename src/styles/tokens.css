@@ -1,0 +1,62 @@
+/* 设计 token —— 唯一真源，组件里不允许出现字面量颜色/圆角/间距。
+   规范见 docs/04-design-system.md §2。 */
+
+:root {
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-full: 999px;
+
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-base: 17px;
+  --fs-lg: 20px;
+  --fs-xl: 26px;
+
+  --lh-body: 1.75;
+  --lh-tight: 1.35;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+
+  --font-ui: system-ui, -apple-system, "MiSans", "HarmonyOS Sans SC", "PingFang SC",
+    "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+  --font-read: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif;
+
+  --bg: #f4efe6;
+  --bg-deep: #e8e0d2;
+  --ink: #211d18;
+  --muted: #7c7367;
+  --line: rgba(33, 29, 24, 0.09);
+  --surface: rgba(255, 252, 246, 0.78);
+  --panel: #fbf7f0;
+  --bar: rgba(244, 239, 230, 0.86);
+  --accent: #b4552d;
+  --danger: #b3261e;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #14120f;
+  --bg-deep: #0a0908;
+  --ink: #ece6dc;
+  --muted: #9b9287;
+  --line: rgba(236, 230, 220, 0.1);
+  --surface: rgba(32, 28, 24, 0.72);
+  --panel: #1c1916;
+  --bar: rgba(20, 18, 15, 0.86);
+  --accent: #e0794a;
+  --danger: #ff8a80;
+
+  color-scheme: dark;
+}
