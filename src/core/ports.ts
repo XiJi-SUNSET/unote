@@ -8,6 +8,7 @@ import type { Asset, Note } from './model/note'
 export interface NoteRepo {
   listAll(): Promise<Note[]>
   listByCourse(courseId: string): Promise<Note[]>
+  countByCourse(): Promise<Record<string, number>>
   get(id: string): Promise<Note | undefined>
   upsert(note: Note): Promise<void>
   softDelete(id: string, now?: number): Promise<void>

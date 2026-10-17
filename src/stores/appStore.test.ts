@@ -62,6 +62,23 @@ describe('appStore', () => {
     expect(restored?.courseId).toBe(courseId)
   })
 
+  it('删除课程时笔记迁到未分类，不级联删除', async () => {
+    await useApp.getState().boot()
+    await useApp.getState().addCourse('要删的课')
+    const courseId = useApp.getState().activeCourseId
+
+    await useApp.getState().createNote('一条笔记')
+    const created = useApp.getState().notes[0]
+    expect(created?.courseId).toBe(courseId)
+
+    await useApp.getState().deleteCourse(courseId)
+
+    const state = useApp.getState()
+    expect(state.courses.some((course) => course.id === courseId)).toBe(false)
+    const moved = state.notes.find((note) => note.id === created?.id)
+    expect(moved?.courseId).toBe(INBOX_ID)
+  })
+
   it('保存正文会同步更新标题', async () => {
     await useApp.getState().boot()
     await useApp.getState().createNote('旧标题')

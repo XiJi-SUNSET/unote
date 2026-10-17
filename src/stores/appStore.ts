@@ -21,6 +21,7 @@ interface AppState {
   courses: Course[]
   notes: Note[]
   deleted: Note[]
+  courseCounts: Record<string, number>
   activeCourseId: string
   lastCourseId: string
   editing: Note | null
@@ -40,6 +41,7 @@ interface AppState {
 
   setActiveCourse: (id: string) => Promise<void>
   addCourse: (name: string) => Promise<void>
+  deleteCourse: (id: string) => Promise<void>
 
   goList: () => Promise<void>
   goSettings: () => Promise<void>
@@ -57,6 +59,7 @@ export const useApp = create<AppState>()((set, get) => ({
   courses: [],
   notes: [],
   deleted: [],
+  courseCounts: {},
   activeCourseId: ALL_COURSES,
   lastCourseId: INBOX_ID,
   editing: null,
@@ -87,6 +90,7 @@ export const useApp = create<AppState>()((set, get) => ({
       ready: true,
       courses,
       notes: await loadNotes(active),
+      courseCounts: await noteRepo.countByCourse(),
       activeCourseId: active,
       lastCourseId,
       editing,
@@ -96,8 +100,12 @@ export const useApp = create<AppState>()((set, get) => ({
 
   async refresh() {
     const { activeCourseId } = get()
-    const courses = await courseRepo.list()
-    set({ courses, notes: await loadNotes(activeCourseId) })
+    const [courses, notes, courseCounts] = await Promise.all([
+      courseRepo.list(),
+      loadNotes(activeCourseId),
+      noteRepo.countByCourse(),
+    ])
+    set({ courses, notes, courseCounts })
   },
 
   async loadDeleted() {
@@ -189,6 +197,17 @@ export const useApp = create<AppState>()((set, get) => ({
     const course = await courseRepo.create(trimmed, await nextCourseOrder())
     await get().refresh()
     await get().setActiveCourse(course.id)
+  },
+
+  /** 删课程只迁笔记，绝不级联删（docs/03 不变量 6） */
+  async deleteCourse(id) {
+    if (id === INBOX_ID) return
+    await courseRepo.remove(id)
+    if (get().activeCourseId === id) {
+      await setSetting(KEY_ACTIVE_COURSE, ALL_COURSES)
+      set({ activeCourseId: ALL_COURSES })
+    }
+    await get().refresh()
   },
 
   async goList() {

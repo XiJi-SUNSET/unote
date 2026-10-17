@@ -10,11 +10,11 @@ export const WALLPAPER_ASSET_PREFIX = 'wallpaper-'
 
 /** 与 Exterior 的 GLASS_DEFAULTS 对齐：遮罩 / 模糊 / 卡片 / 壁纸模糊 */
 export const GLASS_DEFAULTS = {
-  overlay: 22,
-  blur: 16,
-  bgBlur: 0,
-  card: 62,
-  sheet: 90,
+  overlay: 8,
+  blur: 6,
+  bgBlur: 6,
+  card: 70,
+  sheet: 0,
 }
 
 export type GlassKey = keyof typeof GLASS_DEFAULTS
@@ -84,6 +84,16 @@ function applyVisuals(state: Visuals): Scheme {
   root.style.setProperty('--glass', `rgba(${cardRgb}, ${cardAlpha})`)
   root.style.setProperty('--glass-strong', `rgba(${cardRgb}, ${Math.min(0.96, cardAlpha + 0.24)})`)
   root.style.setProperty('--sheet', `rgba(${cardRgb}, ${state.sheet / 100})`)
+  // 纸面拉到极低时就该只剩磨砂，不该留一圈幽灵边框和阴影
+  const solid = state.sheet >= 6
+  root.style.setProperty(
+    '--sheet-border',
+    solid ? 'color-mix(in srgb, var(--ink) 9%, transparent)' : 'transparent',
+  )
+  root.style.setProperty(
+    '--sheet-shadow',
+    solid ? '0 20px 52px rgba(40, 28, 22, 0.3)' : 'none',
+  )
 
   return scheme
 }

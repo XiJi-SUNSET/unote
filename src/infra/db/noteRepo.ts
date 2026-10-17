@@ -19,6 +19,16 @@ export const noteRepo: NoteRepo = {
     return notes.filter((note) => note.deletedAt === null).sort(byPinnedThenRecent)
   },
 
+  async countByCourse() {
+    const notes = await db.notes.toArray()
+    const counts: Record<string, number> = {}
+    for (const note of notes) {
+      if (note.deletedAt !== null) continue
+      counts[note.courseId] = (counts[note.courseId] ?? 0) + 1
+    }
+    return counts
+  },
+
   async get(id) {
     return db.notes.get(id)
   },

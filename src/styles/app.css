@@ -439,12 +439,12 @@ textarea {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+  border: 1px solid var(--sheet-border, var(--line));
   border-radius: var(--r-xl);
   background: var(--sheet);
   backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.45);
   -webkit-backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.45);
-  box-shadow: 0 20px 52px rgba(40, 28, 22, 0.3);
+  box-shadow: var(--sheet-shadow, 0 20px 52px rgba(40, 28, 22, 0.3));
   animation: sheetIn var(--dur-base) var(--ease-out);
 }
 

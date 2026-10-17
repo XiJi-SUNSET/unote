@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Download, ImagePlus, RotateCcw, Trash2, Upload, X } from 'lucide-react'
 import { useApp } from '../stores/appStore'
 import { useSettings } from '../stores/settingsStore'
+import { INBOX_ID } from '../core/model/course'
 import type { Theme } from '../app/theme'
 import {
   downloadBlob,
@@ -47,6 +48,9 @@ function SliderRow({ label, value, min, max, suffix, onChange }: SliderRowProps)
 export function SettingsScreen() {
   const goList = useApp((state) => state.goList)
   const deleted = useApp((state) => state.deleted)
+  const courses = useApp((state) => state.courses)
+  const courseCounts = useApp((state) => state.courseCounts)
+  const deleteCourse = useApp((state) => state.deleteCourse)
   const restoreNote = useApp((state) => state.restoreNote)
   const purgeNote = useApp((state) => state.purgeNote)
 
@@ -68,6 +72,7 @@ export function SettingsScreen() {
   const [busy, setBusy] = useState<'export' | 'import' | 'wallpaper' | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge')
+  const [confirmCourse, setConfirmCourse] = useState<string | null>(null)
 
   useEffect(() => {
     void useApp.getState().loadDeleted()
@@ -224,6 +229,51 @@ export function SettingsScreen() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="panel">
+          <p className="panel__title">课程</p>
+          <ul className="trash">
+            {courses.map((course) => (
+              <li key={course.id} className="trash__row">
+                <span className="trash__title">{course.name}</span>
+                <span className="panel__hint">{courseCounts[course.id] ?? 0} 篇</span>
+                {course.id === INBOX_ID ? null : confirmCourse === course.id ? (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn--accent"
+                      onClick={() => {
+                        setConfirmCourse(null)
+                        void deleteCourse(course.id)
+                      }}
+                    >
+                      删除
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => setConfirmCourse(null)}
+                    >
+                      取消
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="icon-btn icon-btn--danger"
+                    aria-label={`删除课程 ${course.name}`}
+                    onClick={() => setConfirmCourse(course.id)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="panel__hint" style={{ marginTop: 'var(--sp-2)' }}>
+            删除课程不删笔记，笔记会移到「未分类」。
+          </p>
         </div>
 
         <div className="panel">
