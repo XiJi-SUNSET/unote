@@ -58,5 +58,6 @@ pnpm lint && pnpm typecheck
 | 分层与流程 | [docs/02-architecture.md](docs/02-architecture.md) |
 | 数据与备份 | [docs/03-data-backup.md](docs/03-data-backup.md) |
 | 视觉与交互 | [docs/04-design-system.md](docs/04-design-system.md) |
+| 屏级交互细节 | [docs/07-interaction-spec.md](docs/07-interaction-spec.md) |
 | 排期 | [docs/05-roadmap.md](docs/05-roadmap.md) |
 | 为什么这么定 | [docs/adr/](docs/adr/) |

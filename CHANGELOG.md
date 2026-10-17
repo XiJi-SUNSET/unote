@@ -18,6 +18,7 @@
   - `docs/05-roadmap.md` 里程碑与验收标准
 - 架构决策记录：ADR-0001（Capacitor 壳）、ADR-0002（IndexedDB 主存储）、ADR-0003（不做同步与账号）
 - `docs/06-prior-art.md` 同类项目调研（markor / scratch / crossnote / markleaf / catch）
+- `docs/07-interaction-spec.md` 交互规格：新建笔记继承当前上下文，不弹课程选择器
 - `AGENTS.md`：给 AI 代理与贡献者的架构红线
 
 ### Changed

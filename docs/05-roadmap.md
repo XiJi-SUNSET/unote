@@ -46,7 +46,8 @@
 - [ ] 工程脚手架：Vite + React + TS strict + Capacitor Android
 - [ ] 移除 `INTERNET` 权限，跑通空壳安装
 - [ ] 数据层：Dexie schema v1 + NoteRepo / CourseRepo / AssetRepo
-- [ ] 课程：`inbox` 兜底、课程增删改、新建默认落在上次课程
+- [ ] 课程：`inbox` 兜底、课程增删改、新建**继承当前上下文**（不问课程）
+- [ ] 列表底部快速记录条：回车即存，`▸` 展开进编辑器
 - [ ] 列表屏：课程 chips、时间线、置顶、空态
 - [ ] 编辑屏：textarea、自动保存（400ms debounce + 失焦 flush）、标题联动
 - [ ] 预览屏：markdown-it + DOMPurify + 图片渲染

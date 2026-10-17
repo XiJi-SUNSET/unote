@@ -62,6 +62,7 @@ Android 原生壳（Capacitor）+ React + TypeScript，数据全部落在本机 
 - 数据模型与备份格式：[docs/03-data-backup.md](docs/03-data-backup.md)
 - 视觉与交互规范：[docs/04-design-system.md](docs/04-design-system.md)
 - 里程碑：[docs/05-roadmap.md](docs/05-roadmap.md)
+- 交互规格（学自 Exterior，已按轻量 APK 裁剪）：[docs/07-interaction-spec.md](docs/07-interaction-spec.md)
 
 ## 目录结构
 
