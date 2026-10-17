@@ -1,0 +1,68 @@
+name: 问题反馈
+description: 报告一个 bug 或异常行为
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。提交前请先搜索已有的 issue，避免重复。
+
+        **安全漏洞请勿在此提交**，见 [SECURITY.md](../blob/main/SECURITY.md)。
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么
+      description: 期望的行为 vs 实际的行为
+      placeholder: 我点了导出，进度到 60% 卡住，然后回到列表页……
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 新建一篇笔记
+        2. 插入 3 张图
+        3. 点击右上角导出
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Unote 版本
+      description: 设置 → 关于 里可以看到
+      placeholder: 0.3.0
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: 设备与系统
+      placeholder: 小米 13 / Android 15 / HyperOS 2.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: orientation
+    attributes:
+      label: 出问题时的屏幕方向
+      options:
+        - 竖屏
+        - 横屏
+        - 两者都有
+        - 不适用
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 截图 / 录屏（可选）
+      description: 直接拖拽图片到此处
+    validations:
+      required: false

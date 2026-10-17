@@ -1,0 +1,50 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+dist-ssr/
+*.local
+*.tsbuildinfo
+
+# capacitor / android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/capacitor.settings.gradle.bak
+*.apk
+*.aab
+*.keystore
+*.jks
+!debug.keystore
+
+# test / coverage
+coverage/
+playwright-report/
+test-results/
+
+# editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+
+# os
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+*.log
+
+# secrets
+.env
+.env.*
+!.env.example
