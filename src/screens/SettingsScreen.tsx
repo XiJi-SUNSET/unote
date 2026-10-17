@@ -1,11 +1,16 @@
-import { useEffect, useState } from 'react'
-import { ArrowLeft, RotateCcw, Trash2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowLeft, Download, ImagePlus, RotateCcw, Trash2, Upload, X } from 'lucide-react'
 import { useApp } from '../stores/appStore'
-import { getSetting, setSetting } from '../infra/db/settingsRepo'
-import { applyTheme, type Theme } from '../app/theme'
+import { useSettings } from '../stores/settingsStore'
+import type { Theme } from '../app/theme'
+import {
+  downloadBlob,
+  exportBackup,
+  importBackup,
+} from '../infra/backup/backupService'
 
 const THEMES: Array<{ value: Theme; label: string }> = [
-  { value: 'auto', label: '跟随系统' },
+  { value: 'auto', label: '跟随壁纸' },
   { value: 'light', label: '浅色' },
   { value: 'dark', label: '深色' },
 ]
@@ -16,16 +21,73 @@ export function SettingsScreen() {
   const restoreNote = useApp((state) => state.restoreNote)
   const purgeNote = useApp((state) => state.purgeNote)
 
-  const [theme, setTheme] = useState<Theme>('auto')
+  const theme = useSettings((state) => state.theme)
+  const glass = useSettings((state) => state.glass)
+  const blur = useSettings((state) => state.blur)
+  const dim = useSettings((state) => state.dim)
+  const wallpaperUrl = useSettings((state) => state.wallpaperUrl)
+  const hasWallpaper = useSettings((state) => state.wallpaperId !== null)
+  const setTheme = useSettings((state) => state.setTheme)
+  const setGlass = useSettings((state) => state.setGlass)
+  const setBlur = useSettings((state) => state.setBlur)
+  const setDim = useSettings((state) => state.setDim)
+  const setWallpaper = useSettings((state) => state.setWallpaper)
+  const clearWallpaper = useSettings((state) => state.clearWallpaper)
+
+  const wallpaperRef = useRef<HTMLInputElement>(null)
+  const importRef = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState<'export' | 'import' | 'wallpaper' | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge')
 
   useEffect(() => {
-    void getSetting<Theme>('theme', 'auto').then((saved) => setTheme(saved))
+    void useApp.getState().loadDeleted()
   }, [])
 
-  function changeTheme(next: Theme) {
-    setTheme(next)
-    void setSetting('theme', next)
-    applyTheme(next)
+  async function onExport() {
+    setBusy('export')
+    setMessage(null)
+    try {
+      const result = await exportBackup()
+      downloadBlob(result.blob, result.filename)
+      setMessage(
+        `已导出 ${result.counts.notes} 条笔记、${result.counts.courses} 门课程、${result.counts.assets} 张图片`,
+      )
+    } catch (error) {
+      setMessage(`导出失败：${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function onImport(file: File | undefined) {
+    if (!file) return
+    setBusy('import')
+    setMessage(null)
+    try {
+      const result = await importBackup(file, importMode)
+      await useApp.getState().refresh()
+      setMessage(
+        `导入完成：新增 ${result.added}、更新 ${result.updated}、跳过 ${result.skipped}`,
+      )
+    } catch (error) {
+      setMessage(`导入失败：${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function onPickWallpaper(file: File | undefined) {
+    if (!file) return
+    setBusy('wallpaper')
+    setMessage(null)
+    try {
+      await setWallpaper(file)
+    } catch (error) {
+      setMessage(`壁纸设置失败：${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setBusy(null)
+    }
   }
 
   return (
@@ -40,6 +102,84 @@ export function SettingsScreen() {
 
       <div className="settings__body">
         <div className="panel">
+          <p className="panel__title">壁纸</p>
+
+          <div className="panel__row" style={{ marginBottom: 'var(--sp-3)' }}>
+            <div
+              className="wall-chip"
+              style={wallpaperUrl ? { backgroundImage: `url("${wallpaperUrl}")` } : undefined}
+            >
+              {!wallpaperUrl ? <span>默认</span> : null}
+            </div>
+            <button
+              type="button"
+              className="btn"
+              disabled={busy === 'wallpaper'}
+              onClick={() => wallpaperRef.current?.click()}
+            >
+              <ImagePlus size={15} />
+              {hasWallpaper ? '换一张' : '选一张'}
+            </button>
+            {hasWallpaper ? (
+              <button type="button" className="btn btn--ghost" onClick={() => void clearWallpaper()}>
+                <X size={15} />
+                移除
+              </button>
+            ) : null}
+          </div>
+
+          <label className="field">
+            <span>模糊 {blur}px</span>
+            <input
+              className="slider"
+              type="range"
+              min={0}
+              max={30}
+              step={1}
+              value={blur}
+              onChange={(event) => void setBlur(Number(event.target.value))}
+            />
+          </label>
+
+          <label className="field">
+            <span>压暗 {Math.round(dim * 100)}%</span>
+            <input
+              className="slider"
+              type="range"
+              min={0}
+              max={60}
+              step={1}
+              value={Math.round(dim * 100)}
+              onChange={(event) => void setDim(Number(event.target.value) / 100)}
+            />
+          </label>
+
+          <div className="panel__row" style={{ marginTop: 'var(--sp-3)' }}>
+            <span className="panel__hint" style={{ flex: 1 }}>
+              毛玻璃
+            </span>
+            <button
+              type="button"
+              className={`segmented__item${glass ? ' is-active' : ''}`}
+              onClick={() => void setGlass(!glass)}
+            >
+              {glass ? '开' : '关'}
+            </button>
+          </div>
+
+          <input
+            ref={wallpaperRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(event) => {
+              void onPickWallpaper(event.target.files?.[0])
+              event.target.value = ''
+            }}
+          />
+        </div>
+
+        <div className="panel">
           <p className="panel__title">外观</p>
           <div className="segmented">
             {THEMES.map((item) => (
@@ -47,12 +187,70 @@ export function SettingsScreen() {
                 key={item.value}
                 type="button"
                 className={`segmented__item${theme === item.value ? ' is-active' : ''}`}
-                onClick={() => changeTheme(item.value)}
+                onClick={() => void setTheme(item.value)}
               >
                 {item.label}
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="panel">
+          <p className="panel__title">备份</p>
+          <p className="panel__hint" style={{ marginBottom: 'var(--sp-3)' }}>
+            导出为 ZIP（Markdown + 图片 + manifest），换手机时导入即可。
+          </p>
+
+          <div className="panel__row">
+            <button type="button" className="btn btn--accent" disabled={busy === 'export'} onClick={() => void onExport()}>
+              <Download size={15} />
+              {busy === 'export' ? '打包中…' : '导出 ZIP'}
+            </button>
+
+            <button
+              type="button"
+              className="btn"
+              disabled={busy === 'import'}
+              onClick={() => importRef.current?.click()}
+            >
+              <Upload size={15} />
+              {busy === 'import' ? '导入中…' : '导入 ZIP'}
+            </button>
+          </div>
+
+          <div className="panel__row" style={{ marginTop: 'var(--sp-2)' }}>
+            <label className="radio">
+              <input
+                type="radio"
+                name="import-mode"
+                checked={importMode === 'merge'}
+                onChange={() => setImportMode('merge')}
+              />
+              合并（推荐）
+            </label>
+            <label className="radio">
+              <input
+                type="radio"
+                name="import-mode"
+                checked={importMode === 'replace'}
+                onChange={() => setImportMode('replace')}
+              />
+              覆盖
+            </label>
+          </div>
+
+          <input
+            ref={importRef}
+            type="file"
+            accept=".zip,application/zip"
+            hidden
+            onChange={(event) => {
+              void onImport(event.target.files?.[0])
+              event.target.value = ''
+            }}
+          />
+
+          {message ? <p className="panel__msg">{message}</p> : null}
         </div>
 
         <div className="panel">
@@ -89,8 +287,9 @@ export function SettingsScreen() {
         <div className="panel">
           <p className="panel__title">关于</p>
           <p className="panel__hint">
-            Unote 0.1.0 · 本地存储，不联网。<br />
-            导出与导入在 M3 提供。
+            Unote 0.1.0 · 本地存储，不联网。
+            <br />
+            回收站里的笔记不会被导出。
           </p>
         </div>
       </div>

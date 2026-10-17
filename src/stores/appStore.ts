@@ -33,6 +33,7 @@ interface AppState {
   closeEditor: () => Promise<void>
   createNote: (body: string) => Promise<Note | null>
   saveNote: (patch: EditablePatch) => Promise<void>
+  pinNote: (id: string, pinned: boolean) => Promise<void>
   deleteNote: (id: string) => Promise<void>
   restoreNote: (id: string) => Promise<void>
   purgeNote: (id: string) => Promise<void>
@@ -151,6 +152,13 @@ export const useApp = create<AppState>()((set, get) => ({
       editing: next,
       notes: state.notes.map((note) => (note.id === next.id ? next : note)),
     }))
+  },
+
+  async pinNote(id, pinned) {
+    const note = await noteRepo.get(id)
+    if (!note) return
+    await noteRepo.upsert({ ...note, pinned, updatedAt: Date.now() })
+    await get().refresh()
   },
 
   async deleteNote(id) {

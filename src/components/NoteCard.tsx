@@ -14,6 +14,14 @@ function formatTime(timestamp: number): string {
     : `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
 }
 
+function excerptOf(body: string): string {
+  const lines = body.split('\n')
+  const firstIndex = lines.findIndex((line) => line.trim().length > 0)
+  if (firstIndex < 0) return ''
+  // 首行已经是标题了，摘要从第二行开始，避免重复
+  return plainText(lines.slice(firstIndex + 1).join('\n')).slice(0, 80)
+}
+
 interface Props {
   note: Note
   courseName?: string
@@ -21,7 +29,7 @@ interface Props {
 }
 
 export function NoteCard({ note, courseName, onOpen }: Props) {
-  const excerpt = plainText(note.body).slice(0, 80)
+  const excerpt = excerptOf(note.body)
   const title = note.title || '无标题'
 
   return (

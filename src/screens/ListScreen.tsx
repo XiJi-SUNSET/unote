@@ -1,9 +1,11 @@
-import { Settings } from 'lucide-react'
+import { useState } from 'react'
+import { Pin, PinOff, Settings, Trash2 } from 'lucide-react'
 import { useApp } from '../stores/appStore'
 import { ALL_COURSES } from '../core/course/context'
 import { CourseChips } from '../components/CourseChips'
 import { NoteCard } from '../components/NoteCard'
 import { QuickCapture } from '../components/QuickCapture'
+import { SwipeCard } from '../components/SwipeCard'
 
 export function ListScreen() {
   const courses = useApp((state) => state.courses)
@@ -12,7 +14,11 @@ export function ListScreen() {
   const setActiveCourse = useApp((state) => state.setActiveCourse)
   const addCourse = useApp((state) => state.addCourse)
   const openNote = useApp((state) => state.openNote)
+  const pinNote = useApp((state) => state.pinNote)
+  const deleteNote = useApp((state) => state.deleteNote)
   const goSettings = useApp((state) => state.goSettings)
+
+  const [openId, setOpenId] = useState<string | null>(null)
 
   const showCourseName = activeCourseId === ALL_COURSES
   const courseName = (id: string) => courses.find((course) => course.id === id)?.name
@@ -29,7 +35,10 @@ export function ListScreen() {
       <CourseChips
         courses={courses}
         activeId={activeCourseId}
-        onSelect={(id) => void setActiveCourse(id)}
+        onSelect={(id) => {
+          setOpenId(null)
+          void setActiveCourse(id)
+        }}
         onCreate={(name) => void addCourse(name)}
       />
 
@@ -41,12 +50,49 @@ export function ListScreen() {
           </div>
         ) : (
           notes.map((note) => (
-            <NoteCard
+            <SwipeCard
               key={note.id}
-              note={note}
-              courseName={showCourseName ? courseName(note.courseId) : undefined}
-              onOpen={(id) => void openNote(id)}
-            />
+              open={openId === note.id}
+              onOpenChange={(open) => setOpenId(open ? note.id : null)}
+              actions={
+                <>
+                  <button
+                    type="button"
+                    className="swipe__action swipe__action--pin"
+                    onClick={() => {
+                      setOpenId(null)
+                      void pinNote(note.id, !note.pinned)
+                    }}
+                  >
+                    {note.pinned ? <PinOff size={16} /> : <Pin size={16} />}
+                    {note.pinned ? '取消' : '置顶'}
+                  </button>
+                  <button
+                    type="button"
+                    className="swipe__action swipe__action--danger"
+                    onClick={() => {
+                      setOpenId(null)
+                      void deleteNote(note.id)
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    删除
+                  </button>
+                </>
+              }
+            >
+              <NoteCard
+                note={note}
+                courseName={showCourseName ? courseName(note.courseId) : undefined}
+                onOpen={(id) => {
+                  if (openId) {
+                    setOpenId(null)
+                    return
+                  }
+                  void openNote(id)
+                }}
+              />
+            </SwipeCard>
           ))
         )}
       </div>

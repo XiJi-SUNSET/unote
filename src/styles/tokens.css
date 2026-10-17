@@ -1,7 +1,15 @@
-/* 设计 token —— 唯一真源，组件里不允许出现字面量颜色/圆角/间距。
-   规范见 docs/04-design-system.md §2。 */
+/* 设计 token —— 唯一真源。
+   配色取自《辉夜姬的手镯》美术设定：珊瑚红 #fa532d / 特调白 #ffefe5 /
+   长春花蓝 #7a94f5 / 暖黑 #403b3a。规范见 docs/04-design-system.md。 */
 
 :root {
+  /* palette */
+  --coral: #fa532d;
+  --cream: #ffefe5;
+  --periwinkle: #7a94f5;
+  --warm-black: #403b3a;
+
+  /* 间距：4 的倍数，只用这 7 档 */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -10,11 +18,14 @@
   --sp-6: 32px;
   --sp-7: 48px;
 
+  /* 圆角 */
   --r-sm: 10px;
   --r-md: 16px;
   --r-lg: 22px;
+  --r-xl: 28px;
   --r-full: 999px;
 
+  /* 字阶 */
   --fs-xs: 12px;
   --fs-sm: 14px;
   --fs-base: 17px;
@@ -24,6 +35,7 @@
   --lh-body: 1.75;
   --lh-tight: 1.35;
 
+  /* 动效 */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-fast: 120ms;
   --dur-base: 220ms;
@@ -32,31 +44,45 @@
     "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
   --font-read: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif;
 
-  --bg: #f4efe6;
-  --bg-deep: #e8e0d2;
-  --ink: #211d18;
-  --muted: #7c7367;
-  --line: rgba(33, 29, 24, 0.09);
-  --surface: rgba(255, 252, 246, 0.78);
-  --panel: #fbf7f0;
-  --bar: rgba(244, 239, 230, 0.86);
-  --accent: #b4552d;
-  --danger: #b3261e;
+  /* 毛玻璃强度，设置页可调 */
+  --blur: 16px;
+
+  /* —— 浅色（默认） —— */
+  --bg: #ffefe5;
+  --bg-2: #f8ddcd;
+  --ink: #403b3a;
+  --muted: rgba(64, 59, 58, 0.62);
+  --line: rgba(64, 59, 58, 0.12);
+  --glass: rgba(255, 247, 240, 0.66);
+  --glass-strong: rgba(255, 247, 240, 0.9);
+  --paper: rgba(255, 248, 242, 0.94);
+  --accent: #fa532d;
+  --accent-ink: #fff8f3;
+  --accent-soft: rgba(250, 83, 45, 0.12);
+  --link: #5b74d8;
+  --danger: #c0361a;
+  --shadow: 0 12px 32px rgba(64, 59, 58, 0.1);
+  --shadow-soft: 0 4px 14px rgba(64, 59, 58, 0.07);
 
   color-scheme: light;
 }
 
-[data-theme="dark"] {
-  --bg: #14120f;
-  --bg-deep: #0a0908;
-  --ink: #ece6dc;
-  --muted: #9b9287;
-  --line: rgba(236, 230, 220, 0.1);
-  --surface: rgba(32, 28, 24, 0.72);
-  --panel: #1c1916;
-  --bar: rgba(20, 18, 15, 0.86);
-  --accent: #e0794a;
-  --danger: #ff8a80;
+[data-scheme="dark"] {
+  --bg: #1c1614;
+  --bg-2: #2a201d;
+  --ink: #ffefe5;
+  --muted: rgba(255, 239, 229, 0.6);
+  --line: rgba(255, 239, 229, 0.14);
+  --glass: rgba(48, 38, 34, 0.62);
+  --glass-strong: rgba(42, 33, 29, 0.9);
+  --paper: rgba(26, 20, 18, 0.94);
+  --accent: #ff6b47;
+  --accent-ink: #2a1610;
+  --accent-soft: rgba(250, 83, 45, 0.2);
+  --link: #9db0ff;
+  --danger: #ff8a6b;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.28);
 
   color-scheme: dark;
 }

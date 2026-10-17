@@ -16,8 +16,8 @@ body {
   line-height: var(--lh-body);
   color: var(--ink);
   background: var(--bg);
-  background-image: radial-gradient(120% 80% at 20% 0%, var(--bg) 0%, var(--bg-deep) 100%);
   overscroll-behavior: none;
+  isolation: isolate;
 }
 
 button {
@@ -32,12 +32,44 @@ textarea {
   color: inherit;
 }
 
-.boot {
-  height: 100%;
-  background: var(--bg);
+/* ── 壁纸层 ─────────────────────────────────
+   固定全屏，位于内容之下；模糊只作用在这一层，
+   卡片靠 backdrop-filter 取到模糊后的背景。 */
+
+.wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wallpaper__img {
+  position: absolute;
+  inset: -56px; /* 多铺一圈，模糊后边缘不露白 */
+  background-position: center;
+  background-size: cover;
+  transition: filter var(--dur-base) var(--ease-out);
+}
+
+.wallpaper__fallback {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 80% at 88% -12%, color-mix(in srgb, var(--periwinkle) 58%, transparent), transparent 60%),
+    radial-gradient(110% 75% at 2% 106%, color-mix(in srgb, var(--coral) 46%, transparent), transparent 64%),
+    linear-gradient(165deg, var(--bg) 0%, var(--bg-2) 100%);
+}
+
+.wallpaper__scrim {
+  position: absolute;
+  inset: 0;
+  background: #000;
 }
 
 .app {
+  position: relative;
+  z-index: 1;
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -50,7 +82,34 @@ textarea {
     margin: 0 auto;
     border-left: 1px solid var(--line);
     border-right: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 22%, transparent);
   }
+}
+
+.boot {
+  height: 100%;
+  background: var(--bg);
+}
+
+/* ── 毛玻璃材质 ─────────────────────────────
+   半透明 + 背景模糊；关掉时退化为不透明面板。 */
+
+.glass-surface {
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur)) saturate(1.45);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.45);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+[data-glass="off"] .glass-surface,
+[data-glass="off"] .topbar,
+[data-glass="off"] .quick,
+[data-glass="off"] .editor__bar,
+[data-glass="off"] .editor__toolbar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--glass-strong);
 }
 
 /* ── 顶栏 ───────────────────────────────────── */
@@ -60,9 +119,10 @@ textarea {
   align-items: center;
   gap: var(--sp-2);
   padding: calc(var(--sp-3) + env(safe-area-inset-top)) var(--sp-4) var(--sp-2);
-  background: var(--bar);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--glass);
+  backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
+  border-bottom: 1px solid transparent;
 }
 
 .topbar__title {
@@ -81,6 +141,11 @@ textarea {
   letter-spacing: 0.04em;
 }
 
+.brand::after {
+  content: '.';
+  color: var(--accent);
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -91,12 +156,13 @@ textarea {
   border-radius: var(--r-full);
   background: transparent;
   color: var(--muted);
-  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast);
+  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast), color var(--dur-fast);
 }
 
 .icon-btn:active {
   transform: scale(0.92);
-  background: var(--line);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .icon-btn--danger {
@@ -109,7 +175,7 @@ textarea {
   display: flex;
   gap: var(--sp-2);
   overflow-x: auto;
-  padding: var(--sp-1) var(--sp-4) var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
   scrollbar-width: none;
 }
 
@@ -125,16 +191,19 @@ textarea {
   padding: 7px var(--sp-3);
   border: 1px solid var(--line);
   border-radius: var(--r-full);
-  background: transparent;
+  background: var(--glass);
+  backdrop-filter: blur(calc(var(--blur) - 4px)) saturate(1.3);
+  -webkit-backdrop-filter: blur(calc(var(--blur) - 4px)) saturate(1.3);
   color: var(--muted);
   font-size: var(--fs-sm);
   transition: color var(--dur-fast), background var(--dur-fast), border-color var(--dur-fast);
 }
 
 .chip.is-active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 36%, transparent);
 }
 
 .chip--add {
@@ -142,10 +211,11 @@ textarea {
 }
 
 .chip--input {
-  width: 96px;
+  width: 104px;
   padding: 7px var(--sp-3);
   outline: none;
   color: var(--ink);
+  background: var(--glass-strong);
 }
 
 /* ── 列表 ───────────────────────────────────── */
@@ -175,17 +245,24 @@ textarea {
   width: 100%;
   padding: var(--sp-3) var(--sp-4);
   text-align: left;
-  border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  background: var(--surface);
-  transition: transform var(--dur-fast) var(--ease-out);
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur)) saturate(1.45);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.45);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
 }
 
 .note-card:active {
-  transform: scale(0.99);
+  transform: scale(0.985);
+  box-shadow: var(--shadow);
 }
 
 .note-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   font-size: var(--fs-base);
   font-weight: 600;
   line-height: var(--lh-tight);
@@ -194,10 +271,19 @@ textarea {
   white-space: nowrap;
 }
 
+.note-card__title::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 3px;
+  height: 16px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+}
+
 .note-card__excerpt {
   font-size: var(--fs-sm);
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.55;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -216,7 +302,7 @@ textarea {
 }
 
 .note-card__pin {
-  color: var(--accent);
+  color: var(--link);
 }
 
 .empty {
@@ -246,10 +332,10 @@ textarea {
   align-items: center;
   gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-4) calc(var(--sp-2) + env(safe-area-inset-bottom));
+  background: var(--glass);
+  backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
   border-top: 1px solid var(--line);
-  background: var(--bar);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 
 .quick__input {
@@ -283,13 +369,15 @@ textarea {
   height: 38px;
   border: none;
   border-radius: var(--r-full);
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 36%, transparent);
   transition: opacity var(--dur-fast), transform var(--dur-fast) var(--ease-out);
 }
 
 .quick__send:disabled {
-  opacity: 0.25;
+  opacity: 0.3;
+  box-shadow: none;
 }
 
 .quick__send:active {
@@ -311,9 +399,9 @@ textarea {
   gap: var(--sp-1);
   padding: calc(var(--sp-2) + env(safe-area-inset-top)) var(--sp-3) var(--sp-2);
   border-bottom: 1px solid var(--line);
-  background: var(--bar);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--glass);
+  backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
 }
 
 .editor__course {
@@ -322,10 +410,10 @@ textarea {
   gap: var(--sp-1);
   max-width: 40vw;
   padding: 6px var(--sp-3);
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
   border-radius: var(--r-full);
-  background: transparent;
-  color: var(--muted);
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: var(--fs-sm);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -340,6 +428,13 @@ textarea {
   flex: 1;
   min-height: 0;
   display: flex;
+  /* 阅读区用近乎不透明的纸面，壁纸再花也不影响可读性 */
+  background: var(--paper);
+}
+
+[data-glass="on"] .editor__body {
+  backdrop-filter: blur(calc(var(--blur) + 8px)) saturate(1.2);
+  -webkit-backdrop-filter: blur(calc(var(--blur) + 8px)) saturate(1.2);
 }
 
 .editor__textarea {
@@ -370,9 +465,9 @@ textarea {
   gap: 2px;
   padding: var(--sp-1) var(--sp-2) calc(var(--sp-1) + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
-  background: var(--bar);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--glass);
+  backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
 }
 
 .tool {
@@ -385,12 +480,58 @@ textarea {
   border-radius: var(--r-md);
   background: transparent;
   color: var(--muted);
-  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast);
+  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast), color var(--dur-fast);
 }
 
 .tool:active {
   transform: scale(0.92);
-  background: var(--line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ── 右滑操作 ───────────────────────────────── */
+
+.swipe {
+  position: relative;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.swipe__actions {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+}
+
+.swipe__action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 66px;
+  border: none;
+  font-size: var(--fs-xs);
+}
+
+.swipe__action--pin {
+  background: var(--periwinkle);
+  color: #151827;
+}
+
+.swipe__action--danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.swipe__content {
+  position: relative;
+  transition: transform var(--dur-base) var(--ease-out);
+  will-change: transform;
+}
+
+.swipe__content.is-dragging {
+  transition: none;
 }
 
 /* ── 底部弹层 ───────────────────────────────── */
@@ -401,7 +542,8 @@ textarea {
   z-index: 20;
   display: flex;
   align-items: flex-end;
-  background: rgba(0, 0, 0, 0.28);
+  background: rgba(20, 14, 12, 0.32);
+  backdrop-filter: blur(2px);
   animation: fade var(--dur-base) var(--ease-out);
 }
 
@@ -410,8 +552,12 @@ textarea {
   max-width: 680px;
   margin: 0 auto;
   padding: var(--sp-4) var(--sp-4) calc(var(--sp-5) + env(safe-area-inset-bottom));
-  border-radius: var(--r-lg) var(--r-lg) 0 0;
-  background: var(--panel);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  background: var(--glass-strong);
+  backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.5);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
   animation: rise var(--dur-base) var(--ease-out);
 }
 
@@ -487,12 +633,18 @@ textarea {
 
 .panel {
   padding: var(--sp-4);
-  border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  background: var(--surface);
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur)) saturate(1.45);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.45);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
 }
 
 .panel__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin: 0 0 var(--sp-3);
   font-size: var(--fs-sm);
   color: var(--muted);
@@ -505,11 +657,58 @@ textarea {
   line-height: var(--lh-body);
 }
 
+.panel__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.panel__msg {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--accent);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.radio input {
+  accent-color: var(--accent);
+}
+
+.wall-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--glass-strong) center / cover no-repeat;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
 .segmented {
   display: flex;
   padding: 3px;
   border-radius: var(--r-full);
-  background: var(--line);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
 }
 
 .segmented__item {
@@ -520,12 +719,45 @@ textarea {
   background: transparent;
   color: var(--muted);
   font-size: var(--fs-sm);
+  transition: background var(--dur-fast), color var(--dur-fast);
 }
 
 .segmented__item.is-active {
-  background: var(--panel);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  background: var(--glass-strong);
   color: var(--ink);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  font-size: var(--fs-sm);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn--accent {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--muted);
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--accent);
 }
 
 .trash {
@@ -607,7 +839,7 @@ textarea {
 .markdown code {
   padding: 0.1em 0.35em;
   border-radius: var(--r-sm);
-  background: var(--line);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
   font-family: ui-monospace, "JetBrains Mono", monospace;
   font-size: 0.9em;
 }
@@ -615,7 +847,7 @@ textarea {
 .markdown pre {
   padding: var(--sp-3);
   border-radius: var(--r-md);
-  background: var(--line);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
   overflow-x: auto;
 }
 
@@ -632,7 +864,7 @@ textarea {
 }
 
 .markdown a {
-  color: var(--accent);
+  color: var(--link);
 }
 
 .markdown hr {

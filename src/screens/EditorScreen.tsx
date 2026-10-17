@@ -1,19 +1,15 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Bold,
   ChevronDown,
   Eye,
-  EyeOff,
   Heading2,
   Image as ImageIcon,
   Italic,
   List,
-  MoreHorizontal,
-  Pin,
-  PinOff,
+  Pencil,
   Quote,
-  Trash2,
 } from 'lucide-react'
 import { useApp } from '../stores/appStore'
 import { compressImage } from '../infra/image/compress'
@@ -32,13 +28,12 @@ export function EditorScreen() {
   const courses = useApp((state) => state.courses)
   const saveNote = useApp((state) => state.saveNote)
   const closeEditor = useApp((state) => state.closeEditor)
-  const deleteNote = useApp((state) => state.deleteNote)
 
   const noteId = editing?.id ?? ''
-  const [mode, setMode] = useState<'edit' | 'preview'>('edit')
+  /** 默认渲染：打开笔记先看到排版好的内容，点铅笔才进源码编辑 */
+  const [mode, setMode] = useState<'preview' | 'edit'>('preview')
   const [previewSource, setPreviewSource] = useState('')
-  const [sheet, setSheet] = useState<'none' | 'course' | 'more'>('none')
-  const [pinned, setPinned] = useState(false)
+  const [sheet, setSheet] = useState<'none' | 'course'>('none')
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const fileRef = useRef<HTMLInputElement | null>(null)
@@ -57,13 +52,13 @@ export function EditorScreen() {
     await saveNote({ body: value })
   }, [saveNote])
 
-  // 只在这条笔记发生变化时重置本地缓冲。
-  // 不能依赖 editing.body —— 自动保存会改它，那样每次保存都会把预览模式弹回编辑。
-  useEffect(() => {
-    bodyRef.current = editing?.body ?? ''
-    savedRef.current = editing?.body ?? ''
-    setPinned(editing?.pinned ?? false)
-    setMode('edit')
+  // 换笔记时重置缓冲；用 layout effect 避免先闪一帧旧内容
+  useLayoutEffect(() => {
+    const body = editing?.body ?? ''
+    bodyRef.current = body
+    savedRef.current = body
+    setPreviewSource(body)
+    setMode(body.trim() ? 'preview' : 'edit')
     setSheet('none')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteId])
@@ -149,6 +144,17 @@ export function EditorScreen() {
     await closeEditor()
   }
 
+  async function startEdit() {
+    await flush()
+    setMode('edit')
+  }
+
+  function startPreview() {
+    void flush()
+    setPreviewSource(bodyRef.current)
+    setMode('preview')
+  }
+
   return (
     <section className="editor">
       <header className="editor__bar">
@@ -166,37 +172,15 @@ export function EditorScreen() {
         <button
           type="button"
           className="icon-btn"
-          aria-label={mode === 'edit' ? '预览' : '编辑'}
-          onClick={() => {
-            if (mode === 'edit') {
-              void flush()
-              setPreviewSource(bodyRef.current)
-              setMode('preview')
-            } else {
-              setMode('edit')
-            }
-          }}
+          aria-label={mode === 'preview' ? '编辑' : '预览'}
+          onClick={() => (mode === 'preview' ? void startEdit() : startPreview())}
         >
-          {mode === 'edit' ? <Eye size={19} /> : <EyeOff size={19} />}
-        </button>
-
-        <button type="button" className="icon-btn" aria-label="更多" onClick={() => setSheet('more')}>
-          <MoreHorizontal size={20} />
+          {mode === 'preview' ? <Pencil size={18} /> : <Eye size={19} />}
         </button>
       </header>
 
       <div className="editor__body">
-        {mode === 'edit' ? (
-          <textarea
-            key={editing.id}
-            ref={textareaRef}
-            className="editor__textarea"
-            defaultValue={editing.body}
-            placeholder="写点什么…"
-            spellCheck={false}
-            onChange={(event) => scheduleSave(event.target.value)}
-          />
-        ) : (
+        {mode === 'preview' ? (
           <div className="editor__preview">
             {previewSource.trim() ? (
               <Suspense fallback={<p className="empty__hint">渲染中…</p>}>
@@ -206,6 +190,16 @@ export function EditorScreen() {
               <p className="empty__hint">这条笔记还是空的。</p>
             )}
           </div>
+        ) : (
+          <textarea
+            key={editing.id}
+            ref={textareaRef}
+            className="editor__textarea"
+            defaultValue={editing.body}
+            placeholder="写点什么…"
+            spellCheck={false}
+            onChange={(event) => scheduleSave(event.target.value)}
+          />
         )}
       </div>
 
@@ -242,56 +236,25 @@ export function EditorScreen() {
         </div>
       ) : null}
 
-      {sheet !== 'none' ? (
+      {sheet === 'course' ? (
         <div className="sheet-mask" onClick={() => setSheet('none')}>
           <div className="sheet" onClick={(event) => event.stopPropagation()}>
-            {sheet === 'course' ? (
-              <>
-                <p className="sheet__title">归到哪门课</p>
-                <div className="sheet__chips">
-                  {courses.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`chip${item.id === editing.courseId ? ' is-active' : ''}`}
-                      onClick={() => {
-                        setSheet('none')
-                        void saveNote({ courseId: item.id })
-                      }}
-                    >
-                      {item.name}
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="sheet__actions">
+            <p className="sheet__title">归到哪门课</p>
+            <div className="sheet__chips">
+              {courses.map((item) => (
                 <button
+                  key={item.id}
                   type="button"
-                  className="sheet__action"
-                  onClick={() => {
-                    const next = !pinned
-                    setPinned(next)
-                    setSheet('none')
-                    void saveNote({ pinned: next })
-                  }}
-                >
-                  {pinned ? <PinOff size={17} /> : <Pin size={17} />}
-                  {pinned ? '取消置顶' : '置顶'}
-                </button>
-                <button
-                  type="button"
-                  className="sheet__action sheet__action--danger"
+                  className={`chip${item.id === editing.courseId ? ' is-active' : ''}`}
                   onClick={() => {
                     setSheet('none')
-                    void deleteNote(editing.id)
+                    void saveNote({ courseId: item.id })
                   }}
                 >
-                  <Trash2 size={17} />
-                  删除（可在设置里找回）
+                  {item.name}
                 </button>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </div>
       ) : null}

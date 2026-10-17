@@ -35,7 +35,7 @@ describe('<App />', () => {
     expect(screen.getByLabelText('快速记录')).toBeTruthy()
   })
 
-  it('冷启动若有 lastNoteId，直接进编辑屏', async () => {
+  it('冷启动若有 lastNoteId，直接进阅读态（渲染好的 Markdown）', async () => {
     await useApp.getState().boot()
     await useApp.getState().createNote('# 直接打开我')
 
@@ -44,7 +44,8 @@ describe('<App />', () => {
     render(<App />)
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('写点什么…')).toBeTruthy()
+      expect(screen.getByRole('heading', { name: '直接打开我' })).toBeTruthy()
     })
+    expect(screen.getByLabelText('编辑')).toBeTruthy()
   })
 })
