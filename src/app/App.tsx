@@ -4,6 +4,7 @@ import { useSettings } from '../stores/settingsStore'
 import { ListScreen } from '../screens/ListScreen'
 import { EditorScreen } from '../screens/EditorScreen'
 import { Wallpaper } from '../components/Wallpaper'
+import { applyStatusBarStyle, registerBackButton } from '../infra/native/system'
 
 /** 设置页带着备份/fflate，按需加载，别拖累首屏 */
 const SettingsScreen = lazy(() =>
@@ -15,6 +16,7 @@ export function App() {
   const screen = useApp((state) => state.screen)
   const boot = useApp((state) => state.boot)
   const loadSettings = useSettings((state) => state.load)
+  const scheme = useSettings((state) => state.scheme)
 
   useEffect(() => {
     void loadSettings()
@@ -23,6 +25,29 @@ export function App() {
   useEffect(() => {
     void boot()
   }, [boot])
+
+  // 状态栏图标颜色跟着主题走
+  useEffect(() => {
+    applyStatusBarStyle(scheme)
+  }, [scheme])
+
+  // Android 返回键：先退屏，退无可退才退出 App
+  useEffect(
+    () =>
+      registerBackButton(() => {
+        const state = useApp.getState()
+        if (state.screen === 'editor') {
+          void state.closeEditor()
+          return true
+        }
+        if (state.screen === 'settings') {
+          void state.goList()
+          return true
+        }
+        return false
+      }),
+    [],
+  )
 
   if (!ready) return <div className="boot" aria-hidden="true" />
 

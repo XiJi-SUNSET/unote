@@ -5,6 +5,15 @@
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.1] - 2026-10-17
+
+### Fixed
+
+- 状态栏遮挡：开启 edge-to-edge，接入 `@capacitor-community/safe-area`，旧版 WebView 自动加内边距
+- 物理返回键：接管 `backButton`，编辑屏 → 列表 → 退出，不再一按就回桌面
+- 状态栏图标跟随明暗主题
+- 应用图标与启动图换成珊瑚红底 + 奶油色「u.」（`tools/generate-icons.py` 可重跑）
+
 ## [0.1.0] - 2026-10-17
 
 ### Added

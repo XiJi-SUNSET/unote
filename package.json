@@ -1,7 +1,7 @@
 {
   "name": "unote",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "packageManager": "pnpm@10.0.0",
   "scripts": {
@@ -15,8 +15,11 @@
     "android:open": "cap open android"
   },
   "dependencies": {
+    "@capacitor-community/safe-area": "^8.0.1",
     "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.5.3",
+    "@capacitor/status-bar": "^8.0.4",
     "dexie": "^4.4.6",
     "dompurify": "^3.4.17",
     "fflate": "^0.8.3",
