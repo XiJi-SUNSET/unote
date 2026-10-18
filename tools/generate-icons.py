@@ -52,20 +52,23 @@ def draw_art(canvas: Image.Image, scale: float = 1.0, compact: bool = False) -> 
     def pt(x: float, y: float) -> tuple[float, float]:
         return (ox + x * sw, oy + y * sh)
 
-    # 飞溅点（小尺寸下太细的点会糊成一团，直接省略）
+    # 飞溅点（小尺寸下细点会糊成一团，只留大的）
     for dx, dy, dr in DOTS:
-        if compact and dr < 0.011:
+        if compact and dr < 0.013:
             continue
         cx, cy = pt(dx, dy)
         r = dr * sw * (1.25 if compact else 1.0)
         draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=CORAL)
 
-    # 水波：铺满画布宽度，先画最上面那层，再往下一层层盖住
+    # 水波：铺满画布宽度，先画最上面那层，再往下一层层盖住。
+    # 小尺寸只留两层，避免三条细带挤成一坨。
     waves = [
         (0.60, 0.034, 0.4, CYAN),
         (0.70, 0.030, 2.6, TEAL),
         (0.79, 0.028, 1.2, DEEP),
     ]
+    if compact:
+        waves = [waves[0], (0.74, 0.026, 1.2, DEEP)]
     for base, amp, phase, color in waves:
         steps = 48
         points = [(0, h)]
@@ -79,7 +82,7 @@ def draw_art(canvas: Image.Image, scale: float = 1.0, compact: bool = False) -> 
     # 斜笔触：沿轴心一路画圆，半径从尾部到笔尖递减，得到自然的收锋
     tail = pt(0.625, 0.725)
     tip = pt(0.420, 0.315)
-    base_radius = sw * 0.052 * (1.15 if compact else 1.0)
+    base_radius = sw * 0.052 * (1.3 if compact else 1.0)
     steps = 72
     for i in range(steps + 1):
         t = i / steps
@@ -103,8 +106,9 @@ def legacy_icon(size: int) -> Image.Image:
 
 def adaptive_foreground(size: int) -> Image.Image:
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    # 安全区是 66/108，内容缩到 0.80，水波和笔触都留在里面
-    draw_art(image, scale=0.80)
+    # 安全区是 66/108，内容缩到 0.80，水波和笔触都留在里面；
+    # 低密度（108/162px 的前景层）用简化版，保证小图标也认得出
+    draw_art(image, scale=0.80, compact=size <= 162)
     return image
 
 
