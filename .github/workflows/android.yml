@@ -52,10 +52,35 @@ jobs:
           fi
           echo "manifest has no network permission"
 
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "name=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            echo "code=$(echo "${GITHUB_REF_NAME#v}" | awk -F. '{printf "%d%02d%02d", $1, $2, $3}')" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=0.1.4" >> "$GITHUB_OUTPUT"
+            echo "code=1" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Assemble debug APK
         working-directory: android
+        env:
+          UNOTE_KEYSTORE_BASE64: ${{ secrets.UNOTE_KEYSTORE_BASE64 }}
+          UNOTE_STORE_PASSWORD: ${{ secrets.UNOTE_STORE_PASSWORD }}
+          UNOTE_KEY_ALIAS: ${{ secrets.UNOTE_KEY_ALIAS }}
+          UNOTE_KEY_PASSWORD: ${{ secrets.UNOTE_KEY_PASSWORD }}
+          UNOTE_VERSION_CODE: ${{ steps.version.outputs.code }}
+          UNOTE_VERSION_NAME: ${{ steps.version.outputs.name }}
         run: |
           chmod +x ./gradlew
+          if [ -n "$UNOTE_KEYSTORE_BASE64" ]; then
+            echo "$UNOTE_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/unote.p12"
+            export UNOTE_KEYSTORE_PATH="$RUNNER_TEMP/unote.p12"
+            echo "signing with the stable key"
+          else
+            echo "::warning::no signing key in secrets, falling back to the runner debug key"
+          fi
           ./gradlew assembleDebug --no-daemon
 
       - name: Collect artifact

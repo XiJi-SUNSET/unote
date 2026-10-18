@@ -55,7 +55,7 @@ def draw_art(canvas: Image.Image, scale: float = 1.0, compact: bool = False) -> 
         for i in range(steps + 1):
             t = i / steps
             x = (0.20 + 0.80 * t) * w
-            base = 1.06 - 0.52 * t + offset + lift
+            base = 1.14 - 0.66 * t + offset + lift
             y = (base + amp * math.sin(t * math.pi * 2.2 + phase)) * h
             points.append((x, y))
         points.append((w, h))
@@ -63,13 +63,13 @@ def draw_art(canvas: Image.Image, scale: float = 1.0, compact: bool = False) -> 
         draw.polygon(points, fill=color)
 
     water(0.00, 0.030, 0.6, CYAN)
-    water(0.085, 0.028, 2.2, TEAL)
-    water(0.175, 0.026, 1.1, DEEP)
+    water(0.095, 0.028, 2.2, TEAL)
+    water(0.190, 0.026, 1.1, DEEP)
 
     # 荧光笔：尾巴圆钝，笔尖收成一个点
-    tail = (ox + 0.635 * sw, oy + 0.745 * sh)
-    tip = (ox + 0.415 * sw, oy + 0.245 * sh)
-    body = sw * (0.056 if compact else 0.040)
+    tail = (ox + 0.630 * sw, oy + 0.715 * sh)
+    tip = (ox + 0.435 * sw, oy + 0.300 * sh)
+    body = sw * (0.052 if compact else 0.036)
     steps = 80
     for i in range(steps + 1):
         t = i / steps
