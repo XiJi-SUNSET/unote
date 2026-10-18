@@ -20,9 +20,6 @@ importers:
       '@capacitor/core':
         specifier: ^8.5.3
         version: 8.5.3
-      '@capacitor/status-bar':
-        specifier: ^8.0.4
-        version: 8.0.4(@capacitor/core@8.5.3)
       dexie:
         specifier: ^4.4.6
         version: 4.4.6
@@ -133,11 +130,6 @@ packages:
 
   '@capacitor/core@8.5.3':
     resolution: {integrity: sha512-oBE1oGuYE4ZzYYrulC75OuHdSsD6zLUy7d5o1tFwDLG4govGoubY15cxpiI5l0+q87Lm5p0bhbehMdzJg4aFag==}
-
-  '@capacitor/status-bar@8.0.4':
-    resolution: {integrity: sha512-ZMzBUyHBzwDUxcHadEhvOvmoPmMQGMZgaMRJu8ohELeI6IaxoVH9ZhdF/OHnY3/yykv3Glev8Tnbh4aZY/0B0w==}
-    peerDependencies:
-      '@capacitor/core': '>=8.0.0'
 
   '@csstools/color-helpers@6.1.2':
     resolution: {integrity: sha512-grhRy3OKmniaAEKXMjua5z/EODX0MSqBGjunw8+j/3HQjOnahs2AGhvEOIYVUWcU6ScApbhLhVrQTX8XqrMrow==}
@@ -1256,10 +1248,6 @@ snapshots:
   '@capacitor/core@8.5.3':
     dependencies:
       tslib: 2.8.1
-
-  '@capacitor/status-bar@8.0.4(@capacitor/core@8.5.3)':
-    dependencies:
-      '@capacitor/core': 8.5.3
 
   '@csstools/color-helpers@6.1.2': {}
 

@@ -38,7 +38,9 @@ textarea {
 
 .wallpaper {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
@@ -321,7 +323,7 @@ textarea {
 
 .quick {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--sp-2);
   margin: 0 var(--sp-3) calc(var(--sp-3) + env(safe-area-inset-bottom));
   padding: 6px 6px 6px var(--sp-4);
@@ -336,11 +338,16 @@ textarea {
 .quick__input {
   flex: 1;
   min-width: 0;
-  padding: var(--sp-2) 0;
+  max-height: 132px;
+  padding: 9px 0;
   border: none;
   outline: none;
+  resize: none;
+  overflow-y: auto;
   background: transparent;
+  font-family: inherit;
   font-size: var(--fs-base);
+  line-height: 1.45;
 }
 
 .quick__input::placeholder {

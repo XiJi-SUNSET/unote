@@ -1,14 +1,19 @@
 import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
-import { StatusBar, Style } from '@capacitor/status-bar'
+import { SafeArea, SystemBarsStyle } from '@capacitor-community/safe-area'
 import type { Scheme } from '../../app/theme'
 
 const isNative = () => Capacitor.isNativePlatform()
 
-/** 状态栏图标跟着主题走：浅色背景要深色图标，反之亦然。 */
+/**
+ * 状态栏图标跟着主题走。
+ * 枚举命名反直觉：SystemBarsStyle.Light = 浅色背景上的深色图标。
+ */
 export function applyStatusBarStyle(scheme: Scheme): void {
   if (!isNative()) return
-  void StatusBar.setStyle({ style: scheme === 'dark' ? Style.Light : Style.Dark })
+  void SafeArea.setSystemBarsStyle({
+    style: scheme === 'dark' ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+  })
 }
 
 /**
