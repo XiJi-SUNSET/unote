@@ -5,6 +5,19 @@
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.2] - 2026-10-18
+
+### Fixed
+
+- 快速记录条换成自动增高的多行输入框，粘贴带换行的内容不再被压成一行
+- 顶部留白过多：关掉 Capacitor 8 内置的 `SystemBars.insetsHandling`，内边距只由 safe-area 一层负责
+- 移除与 safe-area 冲突的 `@capacitor/status-bar`，状态栏图标样式改用 safe-area 的 API
+- 软键盘弹出时壁纸跟着缩放：壁纸高度在启动时固定，只在横竖屏切换时重算
+
+### Changed
+
+- 图标换成手绘草图的平面版：奶油底、珊瑚飞溅点、斜笔触、青蓝水波
+
 ## [0.1.1] - 2026-10-17
 
 ### Fixed
