@@ -1,6 +1,6 @@
 """生成 Unote 的 Android 图标与启动图。
 
-构图（按草图提炼）：奶油底 + 珊瑚色飞溅点 + 一支斜笔触 + 底部青蓝水波。
+构图：奶油色点阵纸 + 一支珊瑚色荧光笔 + 右下角漫上来的海浪。
 只依赖 Pillow，可重复运行： python tools/generate-icons.py
 """
 
@@ -14,34 +14,19 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "android/app/src/main/res"
 
-CREAM = (255, 243, 234, 255)  # #fff3ea
+PAPER = (255, 243, 234, 255)  # #fff3ea
+DOT = (250, 150, 122, 255)  # 点阵比主色浅，让笔更跳出来
 CORAL = (250, 83, 45, 255)  # #fa532d
+CORAL_DARK = (208, 58, 28, 255)
 CYAN = (86, 223, 227, 255)  # #56dfe3
 TEAL = (51, 169, 201, 255)  # #33a9c9
 DEEP = (30, 127, 166, 255)  # #1e7fa6
 
 DENSITIES = {"mdpi": 1.0, "hdpi": 1.5, "xhdpi": 2.0, "xxhdpi": 3.0, "xxxhdpi": 4.0}
 
-# 飞溅点：(x, y, 半径)，全部按 0..1 归一化
-DOTS = [
-    (0.16, 0.14, 0.017),
-    (0.31, 0.11, 0.013),
-    (0.47, 0.09, 0.011),
-    (0.62, 0.12, 0.015),
-    (0.76, 0.09, 0.010),
-    (0.10, 0.26, 0.012),
-    (0.25, 0.30, 0.010),
-    (0.72, 0.26, 0.013),
-    (0.86, 0.21, 0.009),
-    (0.44, 0.24, 0.008),
-]
-
 
 def draw_art(canvas: Image.Image, scale: float = 1.0, compact: bool = False) -> None:
-    """把整幅插画画在 canvas 上；scale 控制内容占比（自适应图标要留安全区）。
-
-    水波永远铺满整张画布（否则会被裁成方块），飞溅点和笔触落在中间的安全区里。
-    """
+    """点阵纸铺满整张画布；笔和水波落在中间的安全区里。"""
     w, h = canvas.size
     draw = ImageDraw.Draw(canvas)
 
@@ -49,51 +34,74 @@ def draw_art(canvas: Image.Image, scale: float = 1.0, compact: bool = False) -> 
     oy = (h - h * scale) / 2
     sw, sh = w * scale, h * scale
 
-    def pt(x: float, y: float) -> tuple[float, float]:
-        return (ox + x * sw, oy + y * sh)
+    # 点阵纸：等距网格，铺满整张纸
+    step = w * (0.168 if compact else 0.105)
+    radius = w * (0.013 if compact else 0.0075)
+    y = step * 0.62
+    row = 0
+    while y < h * 0.94:
+        x = step * (0.62 if row % 2 else 0.38)
+        while x < w * 0.96:
+            draw.ellipse([x - radius, y - radius, x + radius, y + radius], fill=DOT)
+            x += step
+        y += step
+        row += 1
 
-    # 飞溅点（小尺寸下细点会糊成一团，只留大的）
-    for dx, dy, dr in DOTS:
-        if compact and dr < 0.013:
-            continue
-        cx, cy = pt(dx, dy)
-        r = dr * sw * (1.25 if compact else 1.0)
-        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=CORAL)
-
-    # 水波：铺满画布宽度，先画最上面那层，再往下一层层盖住。
-    # 小尺寸只留两层，避免三条细带挤成一坨。
-    waves = [
-        (0.60, 0.034, 0.4, CYAN),
-        (0.70, 0.030, 2.6, TEAL),
-        (0.79, 0.028, 1.2, DEEP),
-    ]
-    if compact:
-        waves = [waves[0], (0.74, 0.026, 1.2, DEEP)]
-    for base, amp, phase, color in waves:
-        steps = 48
-        points = [(0, h)]
+    # 海浪：从右下角斜着漫上来，三层
+    def water(offset: float, amp: float, phase: float, color):
+        points = []
+        steps = 56
+        lift = -0.06 if compact else 0.0
         for i in range(steps + 1):
-            x = w * i / steps
-            y = oy + sh * base + sh * amp * math.sin((i / steps) * math.pi * 2.7 + phase)
+            t = i / steps
+            x = (0.20 + 0.80 * t) * w
+            base = 1.06 - 0.52 * t + offset + lift
+            y = (base + amp * math.sin(t * math.pi * 2.2 + phase)) * h
             points.append((x, y))
         points.append((w, h))
+        points.append((0.20 * w, h))
         draw.polygon(points, fill=color)
 
-    # 斜笔触：沿轴心一路画圆，半径从尾部到笔尖递减，得到自然的收锋
-    tail = pt(0.625, 0.725)
-    tip = pt(0.420, 0.315)
-    base_radius = sw * 0.052 * (1.3 if compact else 1.0)
-    steps = 72
+    water(0.00, 0.030, 0.6, CYAN)
+    water(0.085, 0.028, 2.2, TEAL)
+    water(0.175, 0.026, 1.1, DEEP)
+
+    # 荧光笔：尾巴圆钝，笔尖收成一个点
+    tail = (ox + 0.635 * sw, oy + 0.745 * sh)
+    tip = (ox + 0.415 * sw, oy + 0.245 * sh)
+    body = sw * (0.056 if compact else 0.040)
+    steps = 80
     for i in range(steps + 1):
         t = i / steps
         cx = tail[0] + (tip[0] - tail[0]) * t
         cy = tail[1] + (tip[1] - tail[1]) * t
-        r = base_radius * (1 - t) ** 0.62 + sw * 0.004
+        # 前 15% 是笔帽，略粗；之后等宽；最后 20% 收锋
+        if t < 0.15:
+            r = body * 1.06
+        else:
+            k = max(0.0, (t - 0.78) / 0.22)
+            r = body * (1 - k) ** 0.85 + sw * 0.004
         draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=CORAL)
+
+    # 笔帽的一道深色环，让"笔"这个身份更明确
+    if not compact:
+        cap = (tail[0] + (tip[0] - tail[0]) * 0.13, tail[1] + (tip[1] - tail[1]) * 0.13)
+        dx = (tip[0] - tail[0]) / math.hypot(tip[0] - tail[0], tip[1] - tail[1])
+        dy = (tip[1] - tail[1]) / math.hypot(tip[0] - tail[0], tip[1] - tail[1])
+        nx, ny = -dy, dx
+        band = body * 1.02
+        draw.line(
+            [
+                (cap[0] - nx * band, cap[1] - ny * band),
+                (cap[0] + nx * band, cap[1] + ny * band),
+            ],
+            fill=CORAL_DARK,
+            width=max(1, int(sw * 0.012)),
+        )
 
 
 def legacy_icon(size: int) -> Image.Image:
-    image = Image.new("RGBA", (size, size), CREAM)
+    image = Image.new("RGBA", (size, size), PAPER)
     mask = Image.new("L", (size, size), 0)
     ImageDraw.Draw(mask).rounded_rectangle(
         [0, 0, size - 1, size - 1], radius=int(size * 0.222), fill=255
@@ -106,14 +114,12 @@ def legacy_icon(size: int) -> Image.Image:
 
 def adaptive_foreground(size: int) -> Image.Image:
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    # 安全区是 66/108，内容缩到 0.80，水波和笔触都留在里面；
-    # 低密度（108/162px 的前景层）用简化版，保证小图标也认得出
     draw_art(image, scale=0.80, compact=size <= 162)
     return image
 
 
 def splash(size: tuple[int, int]) -> Image.Image:
-    image = Image.new("RGBA", size, CREAM)
+    image = Image.new("RGBA", size, PAPER)
     side = min(size) * 0.46
     art = Image.new("RGBA", (int(side), int(side)), (0, 0, 0, 0))
     draw_art(art, scale=1.0)
@@ -144,14 +150,6 @@ def main() -> None:
     design = ROOT / "design"
     design.mkdir(exist_ok=True)
     legacy_icon(512).save(design / "icon-preview.png")
-
-    # 圆形遮罩预览，模拟真实启动器
-    preview = adaptive_foreground(512)
-    circle = Image.new("L", (512, 512), 0)
-    ImageDraw.Draw(circle).ellipse([0, 0, 511, 511], fill=255)
-    masked = Image.new("RGBA", (512, 512), CREAM)
-    masked.paste(preview, (0, 0), circle)
-    masked.save(design / "icon-preview-circle.png")
     print("icons written")
 
 
