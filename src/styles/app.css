@@ -451,7 +451,7 @@ textarea {
   background: var(--sheet);
   backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.45);
   -webkit-backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.45);
-  box-shadow: var(--sheet-shadow, 0 20px 52px rgba(40, 28, 22, 0.3));
+  box-shadow: var(--sheet-shadow);
   animation: sheetIn var(--dur-base) var(--ease-out);
 }
 
@@ -566,12 +566,12 @@ textarea {
 
 .swipe__action--pin {
   background: var(--periwinkle);
-  color: #151827;
+  color: var(--on-periwinkle);
 }
 
 .swipe__action--danger {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-danger);
 }
 
 .swipe__content {
@@ -592,7 +592,7 @@ textarea {
   z-index: 20;
   display: flex;
   align-items: flex-end;
-  background: rgba(20, 14, 12, 0.32);
+  background: var(--mask);
   backdrop-filter: blur(2px);
   animation: fade var(--dur-base) var(--ease-out);
 }
@@ -607,7 +607,7 @@ textarea {
   backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.5);
   -webkit-backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.5);
   border-top: 1px solid var(--line);
-  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-sheet);
   animation: rise var(--dur-base) var(--ease-out);
 }
 

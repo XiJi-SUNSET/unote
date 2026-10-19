@@ -67,6 +67,15 @@
   --shadow: 0 12px 32px rgba(64, 59, 58, 0.1);
   --shadow-soft: 0 4px 14px rgba(64, 59, 58, 0.07);
   --scrim: rgba(255, 239, 229, 0.4);
+  /* 阅读纸面：浮起来的那张纸 */
+  --sheet-shadow: 0 20px 52px rgba(40, 28, 22, 0.3);
+  /* 底部弹层向上投的影 */
+  --shadow-sheet: 0 -12px 40px rgba(0, 0, 0, 0.18);
+  /* 弹层背后的遮罩 */
+  --mask: rgba(20, 14, 12, 0.32);
+  /* 彩色底上的字 */
+  --on-periwinkle: #151827;
+  --on-danger: #fff8f3;
 
   color-scheme: light;
 }
@@ -90,6 +99,11 @@
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
   --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.28);
   --scrim: rgba(28, 22, 20, 0.6);
+  --sheet-shadow: 0 20px 52px rgba(0, 0, 0, 0.5);
+  --shadow-sheet: 0 -12px 40px rgba(0, 0, 0, 0.45);
+  --mask: rgba(8, 5, 4, 0.5);
+  /* 深色下 --danger 是浅珊瑚，底上的字得反过来用深色 */
+  --on-danger: #2a1610;
 
   color-scheme: dark;
 }
