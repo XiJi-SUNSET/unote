@@ -5,6 +5,8 @@ import { db } from '../infra/db/schema'
 import { INBOX_ID } from '../core/model/course'
 import { ALL_COURSES } from '../core/course/context'
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
 beforeEach(async () => {
   db.close()
   await db.delete()
@@ -122,5 +124,29 @@ describe('appStore', () => {
     const stored = await db.notes.get(note.id)
     expect(stored?.deletedAt).not.toBeNull()
     expect(stored?.body).toBe('初稿')
+  })
+
+  it('启动时清掉回收站里超过 30 天的笔记', async () => {
+    await useApp.getState().boot()
+    await useApp.getState().createNote('放太久了')
+    const note = useApp.getState().notes[0]
+    if (!note) throw new Error('note missing')
+
+    await db.notes.update(note.id, { deletedAt: Date.now() - 31 * DAY_MS })
+    await useApp.getState().boot()
+
+    expect(await db.notes.get(note.id)).toBeUndefined()
+  })
+
+  it('回收站里还在 30 天内的笔记不会被清掉', async () => {
+    await useApp.getState().boot()
+    await useApp.getState().createNote('昨天删的')
+    const note = useApp.getState().notes[0]
+    if (!note) throw new Error('note missing')
+
+    await db.notes.update(note.id, { deletedAt: Date.now() - 2 * DAY_MS })
+    await useApp.getState().boot()
+
+    expect(await db.notes.get(note.id)).toBeDefined()
   })
 })

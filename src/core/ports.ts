@@ -15,6 +15,8 @@ export interface NoteRepo {
   restore(id: string): Promise<void>
   listDeleted(): Promise<Note[]>
   purge(id: string): Promise<void>
+  /** 物理删除删除时间早于 before 的笔记，返回条数。见 core/trash.ts */
+  purgeExpired(before: number): Promise<number>
 }
 
 export interface CourseRepo {

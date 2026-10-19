@@ -3,6 +3,7 @@ import { newId } from '../core/ids'
 import { createNote, deriveTitle, type Note } from '../core/model/note'
 import { INBOX_ID, type Course } from '../core/model/course'
 import { ALL_COURSES, resolveCourseId } from '../core/course/context'
+import { trashDeadline } from '../core/trash'
 import { noteRepo } from '../infra/db/noteRepo'
 import { courseRepo, nextCourseOrder } from '../infra/db/courseRepo'
 import { getSetting, setSetting } from '../infra/db/settingsRepo'
@@ -77,6 +78,8 @@ export const useApp = create<AppState>()((set, get) => ({
 
   async boot() {
     await courseRepo.ensureInbox()
+    // 启动时清一次过期回收站（docs/07 §5：30 天后自动清理）
+    await noteRepo.purgeExpired(trashDeadline())
     const courses = await courseRepo.list()
 
     const [lastNoteId, lastCourseId, activeCourseId] = await Promise.all([

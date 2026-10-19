@@ -55,4 +55,11 @@ export const noteRepo: NoteRepo = {
   async purge(id) {
     await db.notes.delete(id)
   },
+
+  async purgeExpired(before) {
+    // deletedAt 上有索引，且 null 不进索引，所以这条只会扫到回收站里的条目
+    const ids = await db.notes.where('deletedAt').belowOrEqual(before).primaryKeys()
+    if (ids.length > 0) await db.notes.bulkDelete(ids)
+    return ids.length
+  },
 }
