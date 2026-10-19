@@ -27,6 +27,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Architecture red lines
+        run: pnpm check:layers
+
       - name: Test
         run: pnpm test
 

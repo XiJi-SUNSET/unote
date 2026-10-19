@@ -20,9 +20,9 @@ Unote 是一个 **Android 单机、完全离线**的课堂速记应用。以下�
 UI (screens/components) → 应用层 (stores) → 领域层 (core) → 基础设施 (infra)
 ```
 
-- `src/core/**` **不得** import `react`、`dexie`、`@capacitor/*`。它只依赖 `core/ports.ts` 定义的接口。ESLint 会拦。
+- `src/core/**` **不得** import `react`、`dexie`、`@capacitor/*`，也不得反向依赖 `infra` / `stores` / `screens` / `components` / `app`。它只依赖 `core/ports.ts` 定义的接口。`pnpm check:layers` 会拦（CI 里也跑）。
 - 组件不得直接访问数据库，只能通过 store 或 repo。
-- 样式不得出现字面量颜色、圆角、间距，只能用 `src/styles/tokens.css` 里的变量。
+- 样式不得出现字面量颜色、圆角、间距，只能用 `src/styles/tokens.css` 里的变量。`app.css` 里的字面量颜色同样由 `check:layers` 拦。
 - 新增依赖前必须说明：现有依赖为什么不够用、体积增加多少。
 
 ## 数据红线
@@ -38,6 +38,7 @@ UI (screens/components) → 应用层 (stores) → 领域层 (core) → 基础�
 pnpm dev           # 浏览器调试（无原生能力）
 pnpm test          # 单元 + 集成测试（Vitest + fake-indexeddb）
 pnpm typecheck     # tsc --noEmit
+pnpm check:layers  # core 依赖方向 + styles 里的字面量颜色
 pnpm build         # 产物在 dist/
 pnpm android:run   # 真机 / 模拟器（Capacitor 壳落地后）
 ```

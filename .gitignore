@@ -52,6 +52,9 @@ yarn-debug.log*
 # local preview artifacts
 .preview/
 
+# agent workspace data (memory, sessions) — not project source
+.workbuddy-ai/
+
 # capacitor generated web assets
 android/app/src/main/assets/public/
 android/app/src/main/assets/capacitor.config.json
