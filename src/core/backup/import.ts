@@ -161,7 +161,7 @@ export function readBackup(entries: Record<string, Uint8Array>): BackupBundle {
 
   const courses = parseCourses(entries['courses.json'])
   const courseIds = new Set(courses.map((course) => course.id))
-  // 包里没有课程表时，全部落到未分类（docs/03 §5.3）
+  // 包里没有课程表时，全部落到未分类（docs/03 §5.2）
   const fallbackCourseId = INBOX_ID
 
   const assets: ImportedAsset[] = []

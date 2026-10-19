@@ -56,9 +56,10 @@
 - [x] Capacitor Android 壳 + 移除 `INTERNET` 权限（`applicationId app.unote`、minSdk 26、关闭 allowBackup）
 - [x] 课程删除 UI（设置 → 课程，删课不删笔记）
 - [ ] 课程重命名 UI
-- [ ] 返回键与边到边适配
+- [x] 返回键与边到边适配（关编辑屏前先 flush 草稿，最后几百毫秒不再丢）
+- [x] 回收站 30 天自动清理（启动时扫一次，docs/07 §5）
 - [ ] 真机走查：键盘遮挡、滚动、图片内存
-- [ ] 首次 GitHub Actions 构建验证（本地无 JDK，只能由 CI 首跑确认）
+- [x] 首次 GitHub Actions 构建验证（tag 推送即出包挂 Release）
 - [ ] Playwright e2e（等 Android 壳落地后对着真浏览器跑）
 
 **DoD**：连续 20 节真实课堂笔记，无数据丢失、无输入卡顿。
