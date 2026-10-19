@@ -2,13 +2,35 @@ import { INBOX_ID } from '../../core/model/course'
 import { assetExtFromMime, buildBackup, type ExportAsset } from '../../core/backup/export'
 import { readBackup } from '../../core/backup/import'
 import { APP_VERSION } from '../../core/version'
-import { db } from '../db/schema'
+import { db, type SettingRow } from '../db/schema'
 import { assetRepo } from '../db/assetRepo'
 import { courseRepo } from '../db/courseRepo'
 import { noteRepo } from '../db/noteRepo'
 import { unzipEntries, zipEntries } from './zip'
 
 const EXPORT_SETTINGS = new Set(['theme', 'overlay', 'blur', 'bgBlur', 'card', 'sheet'])
+
+const THEMES = new Set(['auto', 'light', 'dark'])
+const GLASS_KEYS = ['overlay', 'blur', 'bgBlur', 'card', 'sheet'] as const
+
+/**
+ * 包里带回来的阅读设置要先过一遍再写库：zip 是外部输入，
+ * 一个 `theme: "solarized"` 或者 `card: "abc"` 不该把界面弄坏。
+ */
+function sanitizeSettings(settings: Record<string, unknown>): SettingRow[] {
+  const rows: SettingRow[] = []
+
+  const { theme } = settings
+  if (typeof theme === 'string' && THEMES.has(theme)) rows.push({ key: 'theme', value: theme })
+
+  for (const key of GLASS_KEYS) {
+    const value = settings[key]
+    if (typeof value !== 'number' || !Number.isFinite(value)) continue
+    rows.push({ key, value: Math.min(100, Math.max(0, Math.round(value))) })
+  }
+
+  return rows
+}
 
 export interface ExportResult {
   blob: Blob
@@ -84,13 +106,23 @@ export async function importBackup(file: File, mode: 'merge' | 'replace'): Promi
   let updated = 0
   let skipped = bundle.skipped
 
-  await db.transaction('rw', db.notes, db.courses, db.assets, async () => {
+  // 壁纸是这台设备的偏好，不在备份包里。覆盖模式要清 assets，
+  // 所以先把当前壁纸捞出来，清完再放回去，否则设置里的 wallpaperId 会指向空。
+  const wallpaperRow = await db.settings.get('wallpaperId')
+  const wallpaperId = typeof wallpaperRow?.value === 'string' ? wallpaperRow.value : null
+  const wallpaper = wallpaperId ? await db.assets.get(wallpaperId) : undefined
+
+  await db.transaction('rw', db.notes, db.courses, db.assets, db.settings, async () => {
     if (mode === 'replace') {
       const inbox = await db.courses.get(INBOX_ID)
       await db.notes.clear()
       await db.assets.clear()
       await db.courses.clear()
       if (inbox) await db.courses.put(inbox)
+      if (wallpaper) await db.assets.put(wallpaper)
+
+      // 覆盖模式就是整机迁移，包里的阅读设置跟着一起恢复
+      for (const row of sanitizeSettings(bundle.settings)) await db.settings.put(row)
     }
 
     // 课程：先按 id 匹配，再按名字匹配，都没有才新建（改名后导入不会拆出重复课程）

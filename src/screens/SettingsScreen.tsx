@@ -101,6 +101,8 @@ export function SettingsScreen() {
     try {
       const result = await importBackup(file, importMode)
       await useApp.getState().refresh()
+      // 覆盖模式会带回包里的主题与材质，重新读一遍才会立刻生效
+      await useSettings.getState().load()
       setMessage(
         `导入完成：新增 ${result.added}、更新 ${result.updated}、跳过 ${result.skipped}`,
       )
