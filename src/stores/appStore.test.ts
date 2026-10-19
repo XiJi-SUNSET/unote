@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useApp } from './appStore'
+import { registerDraftFlush, useApp } from './appStore'
 import { db } from '../infra/db/schema'
 import { INBOX_ID } from '../core/model/course'
 import { ALL_COURSES } from '../core/course/context'
@@ -9,6 +9,7 @@ beforeEach(async () => {
   db.close()
   await db.delete()
   await db.open()
+  registerDraftFlush(null)
   useApp.setState({
     ready: false,
     screen: 'list',
@@ -90,5 +91,36 @@ describe('appStore', () => {
 
     expect(useApp.getState().editing?.title).toBe('新标题')
     expect(useApp.getState().notes[0]?.title).toBe('新标题')
+  })
+
+  it('关编辑屏前先落盘草稿（物理返回键走的就是这条路）', async () => {
+    await useApp.getState().boot()
+    await useApp.getState().createNote('初稿')
+    const note = useApp.getState().notes[0]
+    if (!note) throw new Error('note missing')
+
+    await useApp.getState().openNote(note.id)
+    registerDraftFlush(() => useApp.getState().saveNote({ body: '按返回前的最后一句' }))
+
+    await useApp.getState().closeEditor()
+
+    expect(useApp.getState().screen).toBe('list')
+    expect((await db.notes.get(note.id))?.body).toBe('按返回前的最后一句')
+  })
+
+  it('删除正在编辑的笔记不会被 flush 复活', async () => {
+    await useApp.getState().boot()
+    await useApp.getState().createNote('初稿')
+    const note = useApp.getState().notes[0]
+    if (!note) throw new Error('note missing')
+
+    await useApp.getState().openNote(note.id)
+    registerDraftFlush(() => useApp.getState().saveNote({ body: '不该写回去' }))
+
+    await useApp.getState().deleteNote(note.id)
+
+    const stored = await db.notes.get(note.id)
+    expect(stored?.deletedAt).not.toBeNull()
+    expect(stored?.body).toBe('初稿')
   })
 })

@@ -53,6 +53,17 @@ async function loadNotes(activeCourseId: string): Promise<Note[]> {
     : noteRepo.listByCourse(activeCourseId)
 }
 
+/**
+ * 编辑屏把「把还没落盘的草稿写下去」注册进来。
+ * 物理返回键走的是 closeEditor，它拿不到编辑屏里的 buffer；
+ * 必须先 flush 再清 editing，否则最后几百毫秒的输入会静默丢掉。
+ */
+let flushDraft: (() => Promise<void>) | null = null
+
+export function registerDraftFlush(handler: (() => Promise<void>) | null): void {
+  flushDraft = handler
+}
+
 export const useApp = create<AppState>()((set, get) => ({
   ready: false,
   screen: 'list',
@@ -120,6 +131,12 @@ export const useApp = create<AppState>()((set, get) => ({
   },
 
   async closeEditor() {
+    // 顺序不能反：saveNote 依赖 editing，清空了就再也写不进去
+    try {
+      await flushDraft?.()
+    } catch {
+      // 写失败也不能把人困在编辑屏；buffer 还在，下次 flush 会重试
+    }
     set({ editing: null, screen: 'list' })
     await get().refresh()
   },
@@ -171,9 +188,9 @@ export const useApp = create<AppState>()((set, get) => ({
 
   async deleteNote(id) {
     await noteRepo.softDelete(id)
-    const { editing } = get()
-    if (editing?.id === id) await get().closeEditor()
-    else await get().refresh()
+    // 这里**不能**走 closeEditor：flush 会把刚删掉的笔记重新写成未删除
+    if (get().editing?.id === id) set({ editing: null, screen: 'list' })
+    await get().refresh()
   },
 
   async restoreNote(id) {

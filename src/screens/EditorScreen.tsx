@@ -11,7 +11,7 @@ import {
   Pencil,
   Quote,
 } from 'lucide-react'
-import { useApp } from '../stores/appStore'
+import { useApp, registerDraftFlush } from '../stores/appStore'
 import { compressImage } from '../infra/image/compress'
 import { assetRepo } from '../infra/db/assetRepo'
 import { newId } from '../core/ids'
@@ -54,8 +54,9 @@ export function EditorScreen() {
     }
     const value = bodyRef.current
     if (value === savedRef.current) return
-    savedRef.current = value
     await saveNote({ body: value })
+    // 只有真的写进去了才更新水位；失败时留着，下一次 flush 还能重试
+    savedRef.current = value
   }, [saveNote])
 
   // 换笔记时重置缓冲；用 layout effect 避免先闪一帧旧内容
@@ -69,7 +70,13 @@ export function EditorScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteId])
 
-  useEffect(() => () => void flush(), [flush])
+  useEffect(() => () => void flush().catch(() => {}), [flush])
+
+  // 返回键与卸载都拿不到编辑屏里的 buffer，交给 store 在关屏前统一 flush
+  useEffect(() => {
+    registerDraftFlush(flush)
+    return () => registerDraftFlush(null)
+  }, [flush])
 
   useEffect(() => {
     function onHide() {
@@ -89,8 +96,14 @@ export function EditorScreen() {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current)
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null
-      savedRef.current = value
-      void saveNote({ body: value })
+      void (async () => {
+        try {
+          await saveNote({ body: value })
+          savedRef.current = value
+        } catch {
+          // 没写进去就别抬高水位，返回或切后台时 flush 会再试一次
+        }
+      })()
     }, SAVE_DELAY)
   }
 
