@@ -76,6 +76,8 @@
   /* 彩色底上的字 */
   --on-periwinkle: #151827;
   --on-danger: #fff8f3;
+  /* 不透明面板色：滑块圆点的描边用 */
+  --panel: #fff8f3;
 
   color-scheme: light;
 }
@@ -104,6 +106,7 @@
   --mask: rgba(8, 5, 4, 0.5);
   /* 深色下 --danger 是浅珊瑚，底上的字得反过来用深色 */
   --on-danger: #2a1610;
+  --panel: #362e29;
 
   color-scheme: dark;
 }
