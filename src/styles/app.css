@@ -33,11 +33,14 @@ textarea {
 }
 
 /* ── 壁纸层 ─────────────────────────────────
-   固定全屏，位于内容之下；模糊只作用在这一层，
-   卡片靠 backdrop-filter 取到模糊后的背景。 */
+   铺满视口，位于内容之下；模糊只作用在这一层，
+   卡片靠 backdrop-filter 取到模糊后的背景。
+   注意必须是 absolute 而不是 fixed：App 是固定视口不滚动，两者视觉等价，
+   但安卓 WebView 对 fixed 层做 backdrop-filter 采样会静默失效，
+   界面模糊滑条会看起来像坏的。 */
 
 .wallpaper {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -58,11 +61,21 @@ textarea {
 
 .wallpaper__fallback {
   position: absolute;
-  inset: 0;
+  /* 默认渐变也走同一套模糊通道，否则没壁纸时"壁纸模糊"同样无效 */
+  inset: calc(var(--sp-7) * -1);
+  filter: blur(var(--bg-blur));
+  transform: scale(1.04);
+  transition: filter var(--dur-base) var(--ease-out);
   background:
+    /* 一层极淡的点阵纸纹理：没有壁纸时，模糊滑条也有东西可糊 */
+    radial-gradient(
+      color-mix(in srgb, var(--warm-black) 9%, transparent) 1px,
+      transparent 1.5px
+    ),
     radial-gradient(120% 85% at 88% -12%, color-mix(in srgb, var(--periwinkle) 78%, transparent), transparent 58%),
     radial-gradient(115% 80% at 2% 108%, color-mix(in srgb, var(--coral) 62%, transparent), transparent 62%),
     linear-gradient(165deg, var(--bg) 0%, var(--bg-2) 100%);
+  background-size: var(--sp-2) var(--sp-2), auto, auto, auto;
 }
 
 .wallpaper__veil {
