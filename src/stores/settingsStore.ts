@@ -5,6 +5,7 @@ import { assetRepo } from '../infra/db/assetRepo'
 import { getSetting, setSetting } from '../infra/db/settingsRepo'
 import { compressImage } from '../infra/image/compress'
 import { averageLuma } from '../infra/image/luma'
+import { isNativePlatform } from '../infra/native/system'
 
 export const WALLPAPER_ASSET_PREFIX = 'wallpaper-'
 
@@ -73,6 +74,15 @@ function applyVisuals(state: Visuals): Scheme {
   const cardRgb = dark ? '54, 46, 41' : '255, 247, 240'
   const cardAlpha = state.card / 100
 
+  /**
+   * 安卓 WebView 对 backdrop-filter 的支持不可靠：有的内核完全不渲染，
+   * 有的只在静态时渲染、不跟随 CSS 变量重绘。桌面 Chromium 一切正常，
+   * 所以只在原生端把"界面模糊"按比例并进壁纸层——这样无论玻璃背后的
+   * 采样是否生效，拖动滑条都一定有可见变化。网页端保持原语义。
+   */
+  const uiBleed = isNativePlatform() ? state.blur * 0.7 : 0
+  const bgBlur = Math.min(30, state.bgBlur + uiBleed)
+
   root.style.setProperty('--overlay', `rgba(${veilRgb}, ${state.overlay / 100})`)
   // 阅读层：浅色几乎不加色，靠强模糊把壁纸化开；深色才压暗（同色，不用灰罩）
   const scrimAlpha = dark
@@ -80,7 +90,7 @@ function applyVisuals(state: Visuals): Scheme {
     : Math.min(0.35, (state.overlay / 100) * 0.6)
   root.style.setProperty('--scrim', `rgba(${veilRgb}, ${scrimAlpha})`)
   root.style.setProperty('--blur', `${state.blur}px`)
-  root.style.setProperty('--bg-blur', `${state.bgBlur}px`)
+  root.style.setProperty('--bg-blur', `${bgBlur}px`)
   root.style.setProperty('--glass', `rgba(${cardRgb}, ${cardAlpha})`)
   root.style.setProperty('--glass-strong', `rgba(${cardRgb}, ${Math.min(0.96, cardAlpha + 0.24)})`)
   root.style.setProperty('--sheet', `rgba(${cardRgb}, ${state.sheet / 100})`)

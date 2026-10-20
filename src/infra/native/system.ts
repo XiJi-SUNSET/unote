@@ -5,6 +5,9 @@ import type { Scheme } from '../../app/theme'
 
 const isNative = () => Capacitor.isNativePlatform()
 
+/** 给 store 用：同一个判断，别各写一份。 */
+export const isNativePlatform = isNative
+
 /**
  * 状态栏图标跟着主题走。
  * 枚举命名反直觉：SystemBarsStyle.Light = 浅色背景上的深色图标。
