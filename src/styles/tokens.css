@@ -79,6 +79,17 @@
   /* 不透明面板色：滑块圆点的描边用 */
   --panel: #fff8f3;
 
+  /* 没选壁纸时的默认背景。壁纸层和玻璃面的切片共用这一份，
+     保证"窗口里看到的"和"窗口外的"是同一张图。 */
+  --wallpaper-fallback:
+    radial-gradient(120% 85% at 88% -12%, color-mix(in srgb, var(--periwinkle) 78%, transparent), transparent 58%),
+    radial-gradient(115% 80% at 2% 108%, color-mix(in srgb, var(--coral) 62%, transparent), transparent 62%),
+    linear-gradient(165deg, var(--bg) 0%, var(--bg-2) 100%);
+
+  /* 壁纸层向外多铺的距离：模糊会把边缘吃掉，两层（壁纸 / 玻璃切片）
+     必须用同一个值，否则切片和背景对不上 */
+  --wp-overscan: 96px;
+
   color-scheme: light;
 }
 

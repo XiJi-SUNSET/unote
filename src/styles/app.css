@@ -33,11 +33,10 @@ textarea {
 }
 
 /* ── 壁纸层 ─────────────────────────────────
-   铺满视口，位于内容之下；模糊只作用在这一层，
-   卡片靠 backdrop-filter 取到模糊后的背景。
-   注意必须是 absolute 而不是 fixed：App 是固定视口不滚动，两者视觉等价，
-   但安卓 WebView 对 fixed 层做 backdrop-filter 采样会静默失效，
-   界面模糊滑条会看起来像坏的。 */
+   铺满视口，位于内容之下；--bg-blur 只作用在这一层（"壁纸模糊"）。
+   玻璃面不再向它取样（见下面的毛玻璃材质），而是各自铺一份切片，
+   所以"界面模糊"只影响窗口内部。
+   absolute 而非 fixed：App 是固定视口不滚动，两者视觉等价。 */
 
 .wallpaper {
   position: absolute;
@@ -51,30 +50,24 @@ textarea {
 
 .wallpaper__img {
   position: absolute;
-  inset: -56px; /* 多铺一圈，模糊后边缘不露白 */
+  /* 多铺一圈，模糊后边缘不露白；玻璃切片用同一个 --wp-overscan 对齐 */
+  inset: calc(var(--wp-overscan) * -1);
   background-position: center;
   background-size: cover;
   filter: blur(var(--bg-blur));
-  transform: scale(1.04);
   transition: filter var(--dur-base) var(--ease-out);
 }
 
 .wallpaper__fallback {
   position: absolute;
   /* 默认渐变也走同一套模糊通道，否则没壁纸时"壁纸模糊"同样无效 */
-  inset: calc(var(--sp-7) * -1);
+  inset: calc(var(--wp-overscan) * -1);
   filter: blur(var(--bg-blur));
-  transform: scale(1.04);
   transition: filter var(--dur-base) var(--ease-out);
-  background:
-    /* 一层极淡的点阵纸纹理：没有壁纸时，模糊滑条也有东西可糊 */
-    radial-gradient(
-      color-mix(in srgb, var(--warm-black) 9%, transparent) 1px,
-      transparent 1.5px
-    ),
-    radial-gradient(120% 85% at 88% -12%, color-mix(in srgb, var(--periwinkle) 78%, transparent), transparent 58%),
-    radial-gradient(115% 80% at 2% 108%, color-mix(in srgb, var(--coral) 62%, transparent), transparent 62%),
-    linear-gradient(165deg, var(--bg) 0%, var(--bg-2) 100%);
+  /* 第一层是极淡的点阵纸纹理：没有壁纸时，模糊滑条也有东西可糊 */
+  background-image:
+    radial-gradient(color-mix(in srgb, var(--warm-black) 9%, transparent) 1px, transparent 1.5px),
+    var(--wallpaper-fallback);
   background-size: var(--sp-2) var(--sp-2), auto, auto, auto;
 }
 
@@ -109,14 +102,107 @@ textarea {
 }
 
 /* ── 毛玻璃材质 ─────────────────────────────
-   半透明 + 背景模糊；关掉时退化为不透明面板。 */
+   不依赖 backdrop-filter：每个玻璃面自己铺一份"对齐视口"的壁纸切片，
+   再对切片做普通的 filter: blur()。安卓 WebView 上 backdrop-filter
+   常年不渲染，而 filter 一定有效；同时模糊只发生在窗口内部，
+   壁纸本体由 --bg-blur 单独控制，两个滑条互不影响。
+
+   元素自己不再画底色：底色 / 遮罩 / 壁纸切片叠在 ::before 里，
+   这样顺序天然是"切片在下、底色在上、内容最上"。 */
+
+.glass-surface,
+.topbar,
+.chip,
+.note-card,
+.editor,
+.paper-sheet,
+.sheet,
+.panel,
+.quick {
+  --frost-tint: var(--glass);
+  --frost-blur: var(--blur);
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+}
+
+.glass-surface::before,
+.topbar::before,
+.chip::before,
+.note-card::before,
+.editor::before,
+.paper-sheet::before,
+.sheet::before,
+.panel::before,
+.quick::before {
+  content: '';
+  position: absolute;
+  /* 切片本身是"整张壁纸"，尺寸和位置都跟壁纸层完全一致：
+     左上角 = -(overscan + 元素在视口里的偏移)，尺寸 = 视口 + 两侧 overscan。
+     --frost-x / --frost-y 由 infra/dom/frost.ts 每帧写入。 */
+  top: calc((var(--wp-overscan) + var(--frost-y, 0px)) * -1);
+  left: calc((var(--wp-overscan) + var(--frost-x, 0px)) * -1);
+  width: calc(100vw + var(--wp-overscan) * 2);
+  height: calc(100vh + var(--wp-overscan) * 2);
+  background-image:
+    linear-gradient(var(--frost-tint), var(--frost-tint)),
+    linear-gradient(var(--overlay), var(--overlay)),
+    var(--wallpaper-image, var(--wallpaper-fallback));
+  background-size: cover;
+  background-position: center;
+  /* 背后那张壁纸本来就被 --bg-blur 糊过，窗口里在它之上再糊一层 */
+  filter: blur(calc(var(--bg-blur) + var(--frost-blur))) saturate(1.4);
+  pointer-events: none;
+}
 
 .glass-surface {
-  background: var(--glass);
-  backdrop-filter: blur(var(--blur)) saturate(1.45);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.45);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
+}
+
+.topbar {
+  --frost-blur: calc(var(--blur) + 6px);
+  border-bottom: 1px solid transparent;
+}
+
+.chip {
+  --frost-blur: max(0px, calc(var(--blur) - 4px));
+}
+
+/* 选中态是实色，不需要玻璃 */
+.chip.is-active::before {
+  display: none;
+}
+
+.note-card {
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+
+.editor {
+  --frost-tint: var(--scrim);
+  --frost-blur: calc(var(--blur) + 12px);
+}
+
+.paper-sheet {
+  --frost-tint: var(--sheet);
+  --frost-blur: calc(var(--blur) + 10px);
+}
+
+.sheet {
+  --frost-tint: var(--glass-strong);
+  --frost-blur: calc(var(--blur) + 10px);
+}
+
+.panel {
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+
+.quick {
+  --frost-blur: calc(var(--blur) + 6px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
 }
 
 /* ── 顶栏 ───────────────────────────────────── */
@@ -126,10 +212,6 @@ textarea {
   align-items: center;
   gap: var(--sp-2);
   padding: calc(var(--sp-3) + env(safe-area-inset-top)) var(--sp-4) var(--sp-2);
-  background: var(--glass);
-  backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
-  -webkit-backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
-  border-bottom: 1px solid transparent;
 }
 
 .topbar__title {
@@ -198,9 +280,6 @@ textarea {
   padding: 7px var(--sp-3);
   border: 1px solid var(--line);
   border-radius: var(--r-full);
-  background: var(--glass);
-  backdrop-filter: blur(calc(var(--blur) - 4px)) saturate(1.3);
-  -webkit-backdrop-filter: blur(calc(var(--blur) - 4px)) saturate(1.3);
   color: var(--muted);
   font-size: var(--fs-sm);
   transition: color var(--dur-fast), background var(--dur-fast), border-color var(--dur-fast);
@@ -253,11 +332,6 @@ textarea {
   padding: var(--sp-3) var(--sp-4);
   text-align: left;
   border-radius: var(--r-lg);
-  background: var(--glass);
-  backdrop-filter: blur(var(--blur)) saturate(1.45);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.45);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-soft);
   transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
 }
 
@@ -340,14 +414,9 @@ textarea {
   gap: var(--sp-2);
   margin: 0 var(--sp-3) calc(var(--sp-3) + env(safe-area-inset-bottom));
   padding: 6px 6px 6px var(--sp-4);
-  border: 1px solid var(--line);
   /* 别用 --r-full：输入框会随内容长高，999px 会被折算成半高的大圆角，
      多行时首行文字会跑到圆角外面去。--r-lg 与窗口圆角对齐。 */
   border-radius: var(--r-lg);
-  background: var(--glass);
-  backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
-  -webkit-backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
-  box-shadow: var(--shadow-soft);
 }
 
 .quick__input {
@@ -410,9 +479,6 @@ textarea {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  background: var(--scrim);
-  backdrop-filter: blur(calc(var(--blur) + 12px)) saturate(1.3);
-  -webkit-backdrop-filter: blur(calc(var(--blur) + 12px)) saturate(1.3);
   animation: fade var(--dur-base) var(--ease-out);
 }
 
@@ -460,12 +526,8 @@ textarea {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   border: 1px solid var(--sheet-border, var(--line));
   border-radius: var(--r-xl);
-  background: var(--sheet);
-  backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.45);
-  -webkit-backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.45);
   box-shadow: var(--sheet-shadow);
   animation: sheetIn var(--dur-base) var(--ease-out);
 }
@@ -608,7 +670,6 @@ textarea {
   display: flex;
   align-items: flex-end;
   background: var(--mask);
-  backdrop-filter: blur(2px);
   animation: fade var(--dur-base) var(--ease-out);
 }
 
@@ -618,9 +679,6 @@ textarea {
   margin: 0 auto;
   padding: var(--sp-4) var(--sp-4) calc(var(--sp-5) + env(safe-area-inset-bottom));
   border-radius: var(--r-xl) var(--r-xl) 0 0;
-  background: var(--glass-strong);
-  backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.5);
-  -webkit-backdrop-filter: blur(calc(var(--blur) + 10px)) saturate(1.5);
   border-top: 1px solid var(--line);
   box-shadow: var(--shadow-sheet);
   animation: rise var(--dur-base) var(--ease-out);
@@ -699,11 +757,6 @@ textarea {
 .panel {
   padding: var(--sp-4);
   border-radius: var(--r-lg);
-  background: var(--glass);
-  backdrop-filter: blur(var(--blur)) saturate(1.45);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.45);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-soft);
 }
 
 .panel__title {

@@ -5,6 +5,7 @@ import { ListScreen } from '../screens/ListScreen'
 import { EditorScreen } from '../screens/EditorScreen'
 import { Wallpaper } from '../components/Wallpaper'
 import { applyStatusBarStyle, registerBackButton } from '../infra/native/system'
+import { trackFrostOffsets } from '../infra/dom/frost'
 
 /** 设置页带着备份/fflate，按需加载，别拖累首屏 */
 const SettingsScreen = lazy(() =>
@@ -30,6 +31,9 @@ export function App() {
   useEffect(() => {
     applyStatusBarStyle(scheme)
   }, [scheme])
+
+  // 玻璃面里的壁纸切片要对齐视口，位置变化时跟着更新
+  useEffect(() => trackFrostOffsets(), [])
 
   // Android 返回键：先退屏，退无可退才退出 App
   useEffect(
