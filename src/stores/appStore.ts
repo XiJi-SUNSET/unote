@@ -140,6 +140,9 @@ export const useApp = create<AppState>()((set, get) => ({
     } catch {
       // 写失败也不能把人困在编辑屏；buffer 还在，下次 flush 会重试
     }
+    // 人已经主动退出了编辑屏，下次启动就该停在列表，
+    // 不该再把这条笔记"顶"回眼前（冷启动回到上一篇只针对被系统杀掉的场景）
+    await setSetting(KEY_LAST_NOTE, null)
     set({ editing: null, screen: 'list' })
     await get().refresh()
   },
@@ -156,7 +159,8 @@ export const useApp = create<AppState>()((set, get) => ({
     await noteRepo.upsert(note)
     await setSetting(KEY_LAST_COURSE, courseId)
     set({ lastCourseId: courseId })
-    await setSetting(KEY_LAST_NOTE, note.id)
+    // 这里刻意不记 KEY_LAST_NOTE：快速记录只是存下一条，人还在列表上，
+    // 下次启动不该凭空打开它。真正进编辑屏由 openNote 负责记录。
     await get().refresh()
     return note
   },
@@ -192,7 +196,10 @@ export const useApp = create<AppState>()((set, get) => ({
   async deleteNote(id) {
     await noteRepo.softDelete(id)
     // 这里**不能**走 closeEditor：flush 会把刚删掉的笔记重新写成未删除
-    if (get().editing?.id === id) set({ editing: null, screen: 'list' })
+    if (get().editing?.id === id) {
+      await setSetting(KEY_LAST_NOTE, null)
+      set({ editing: null, screen: 'list' })
+    }
     await get().refresh()
   },
 

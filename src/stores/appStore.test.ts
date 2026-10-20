@@ -149,4 +149,42 @@ describe('appStore', () => {
 
     expect(await db.notes.get(note.id)).toBeDefined()
   })
+
+  it('快速记录不会让下次启动自动打开那条笔记', async () => {
+    await useApp.getState().boot()
+    await useApp.getState().createNote('记一句就完事')
+    expect(useApp.getState().screen).toBe('list')
+
+    await useApp.getState().boot()
+
+    expect(useApp.getState().screen).toBe('list')
+    expect(useApp.getState().editing).toBeNull()
+  })
+
+  it('主动退出编辑屏后，下次启动停在列表', async () => {
+    await useApp.getState().boot()
+    await useApp.getState().createNote('看两眼')
+    const note = useApp.getState().notes[0]
+    if (!note) throw new Error('note missing')
+
+    await useApp.getState().openNote(note.id)
+    await useApp.getState().closeEditor()
+    await useApp.getState().boot()
+
+    expect(useApp.getState().screen).toBe('list')
+  })
+
+  it('在编辑屏里被系统杀掉后，下次启动回到那一篇', async () => {
+    await useApp.getState().boot()
+    await useApp.getState().createNote('写到一半')
+    const note = useApp.getState().notes[0]
+    if (!note) throw new Error('note missing')
+
+    await useApp.getState().openNote(note.id)
+    // 不调 closeEditor，模拟进程被直接杀掉
+    await useApp.getState().boot()
+
+    expect(useApp.getState().screen).toBe('editor')
+    expect(useApp.getState().editing?.id).toBe(note.id)
+  })
 })
