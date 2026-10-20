@@ -341,7 +341,9 @@ textarea {
   margin: 0 var(--sp-3) calc(var(--sp-3) + env(safe-area-inset-bottom));
   padding: 6px 6px 6px var(--sp-4);
   border: 1px solid var(--line);
-  border-radius: var(--r-full);
+  /* 别用 --r-full：输入框会随内容长高，999px 会被折算成半高的大圆角，
+     多行时首行文字会跑到圆角外面去。--r-lg 与窗口圆角对齐。 */
+  border-radius: var(--r-lg);
   background: var(--glass);
   backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
   -webkit-backdrop-filter: blur(calc(var(--blur) + 6px)) saturate(1.5);
