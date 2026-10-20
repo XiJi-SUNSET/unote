@@ -123,6 +123,8 @@ textarea {
   --frost-blur: var(--blur);
   position: relative;
   overflow: hidden;
+  /* 必须成层：::before 用负 z-index 沉到内容下面，没有层叠上下文会跑到父层去 */
+  isolation: isolate;
   background: transparent;
 }
 
@@ -150,6 +152,8 @@ textarea {
     var(--wallpaper-image, var(--wallpaper-fallback));
   background-size: cover;
   background-position: center;
+  /* 绝对定位的伪元素默认画在正文之上，会把内容整块盖住；沉到最底层 */
+  z-index: -1;
   /* 背后那张壁纸本来就被 --bg-blur 糊过，窗口里在它之上再糊一层 */
   filter: blur(calc(var(--bg-blur) + var(--frost-blur))) saturate(1.4);
   pointer-events: none;
