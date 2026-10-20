@@ -3,6 +3,7 @@ import { ArrowLeft, Download, ImagePlus, RotateCcw, Trash2, Upload, X } from 'lu
 import { useApp } from '../stores/appStore'
 import { useSettings } from '../stores/settingsStore'
 import { INBOX_ID } from '../core/model/course'
+import { APP_VERSION } from '../core/version'
 import type { Theme } from '../app/theme'
 import {
   downloadBlob,
@@ -370,7 +371,7 @@ export function SettingsScreen() {
         <div className="panel">
           <p className="panel__title">关于</p>
           <p className="panel__hint">
-            Unote 0.1.0 · 本地存储，不联网。
+            Unote {APP_VERSION} · 本地存储，不联网。
             <br />
             回收站里的笔记不会被导出。
           </p>
